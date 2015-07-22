@@ -136,7 +136,8 @@ PUBLIC int tinix_main()
 	proc_table[3].priority =  3;
 	proc_table[4].priority =  7;
 	proc_table[5].priority =  10;
-	proc_table[6].priority =  10;//calendar
+	proc_table[6].priority =  10;
+
 
 
 	firstLen=firstHead=secondLen=thirdLen=0;
