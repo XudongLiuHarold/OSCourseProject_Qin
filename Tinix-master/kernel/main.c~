@@ -393,7 +393,7 @@ void goBangGameStart()
 		f=e%7;
 		j=f;         
 		m=j;
-		printf("*****The calendar of 2015.7*****\n");
+		printf("***%dThe calendar of 2015.7***\n");
 		for(a=1;a<=12;a++)   
    		{
 			if(a==7)
