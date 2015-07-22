@@ -16,7 +16,7 @@
 #include "proto.h"
 
 
-void initializeAllPro()	//重新初始化所有的进程，加入到不同的进程优先级队列中
+void initializeAllPro()	//脰脴脨脗鲁玫脢录禄炉脣霉脫脨碌脛陆酶鲁脤拢卢录脫脠毛碌陆虏禄脥卢碌脛陆酶鲁脤脫脜脧脠录露露脫脕脨脰脨
 {
 	PROCESS* p;
 	firstLen=0;
@@ -35,12 +35,19 @@ void initializeAllPro()	//重新初始化所有的进程，加入到不同的进程优先级队列中
 			p->whichQueue=1;
 			
 		}
-		else
+		else if (p->priority>=5)
 		{
 			secondQueue[secondLen]=p;
 			secondLen++;
 			p->ticks=p->priority;
 			p->whichQueue=2;
+		}
+		else
+		{
+			thirdQueue[thirdLen]=p;
+			thirdLen++;
+			p->ticks=p->priority;
+			p->whichQueue=3;
 		}
 	}
 }
@@ -60,13 +67,13 @@ PUBLIC void schedule()
 	{
 		if (firstLen-firstHead>0)
 		{		
-			p_proc_ready=firstQueue[firstHead];	//第一个队列按照先到先得
+			p_proc_ready=firstQueue[firstHead];	//碌脷脪禄赂枚露脫脕脨掳麓脮脮脧脠碌陆脧脠碌脙
 			greatest_priority=p_proc_ready->ticks;
 			break;
 		}
-		else						//第二个队列按照优先级
+		else if (secondLen-firstHead>0)						//碌脷露镁赂枚露脫脕脨掳麓脮脮脫脜脧脠录露
 		{
-			for (i=0; i<secondLen; i++)		//第二个队列增设判断是否为runnable状态
+			for (i=0; i<secondLen; i++)		//碌脷露镁赂枚露脫脕脨脭枚脡猫脜脨露脧脢脟路帽脦陋runnable脳麓脤卢
 			{
 				p=secondQueue[i];
 				if (p->state!=kRUNNABLE || p->ticks==0) continue;
@@ -75,13 +82,22 @@ PUBLIC void schedule()
 					greatest_priority = p->ticks;
 					p_proc_ready = p;
 				}
-				/*{	下面代码被卡死。。。我也不懂为什么。。
+				/*{	脧脗脙忙麓煤脗毛卤禄驴篓脣脌隆拢隆拢隆拢脦脪脪虏虏禄露庐脦陋脢虏脙麓隆拢隆拢
 					if (p->priority>greatest_priority && p->ticks!=0)
 					{
 						greatest_priority=p->priority;
 						p_proc_ready=p;
 					}
 				}*/
+			}
+		}
+		else//third queue
+		{
+			for (i = 0; i < thirdLen; ++i)
+			{
+				p_proc_ready=thirdQueue[firstHead];	
+				greatest_priority=p_proc_ready->ticks;
+				break;
 			}
 		}
 		if (!greatest_priority)	initializeAllPro();

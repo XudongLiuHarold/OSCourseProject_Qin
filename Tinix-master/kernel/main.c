@@ -46,12 +46,19 @@ void addToQueue(PROCESS* p)
 		p->ticks=2;
 		p->whichQueue=1;
 	}
-	else
+	else if (p->priority>=5)
 	{
 		secondQueue[secondLen]=p;
 		secondLen++;
 		p->ticks=p->priority;
 		p->whichQueue=2;
+	}
+	else 
+	{
+		thirdQueue[thirdLen]=p;
+		thirdLen++;
+		p->ticks=5;
+		p->whichQueue=3;
 	}
 }
 
@@ -125,14 +132,14 @@ PUBLIC int tinix_main()
 	//修改这里的优先级和ticks
 	proc_table[0].priority = 15;
 	proc_table[1].priority =  5;
-	proc_table[2].priority =  5;
-	proc_table[3].priority =  5;
+	proc_table[2].priority =  2;
+	proc_table[3].priority =  3;
 	proc_table[4].priority =  7;
 	proc_table[5].priority =  10;
 	proc_table[6].priority =  10;
 
 	//对优先队列初始化
-	firstLen=firstHead=secondLen=0;
+	firstLen=firstHead=secondLen=thirdLen=0;
 	for (i=0; i<NR_TASKS+NR_PROCS;i++)
 	{
 		addToQueue(proc_table+i);
@@ -208,6 +215,8 @@ void show()
 			printf("    Ready\n");
 			break;
 		}
+		printf(p->whichQueue);
+		printf("\n");
 	}
 }
 
