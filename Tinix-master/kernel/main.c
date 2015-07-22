@@ -14,7 +14,7 @@
 #include "console.h"
 #include "global.h"
 #include "proto.h"
-
+     
 int strcmp(char *str1,char *str2)
 {
 	int i;
@@ -90,13 +90,13 @@ PUBLIC int tinix_main()
 	t_8		rpl;
 	int		eflags;
 	for(i=0;i<NR_TASKS+NR_PROCS;i++){
-		if (i < NR_TASKS) {	/* ÈÎÎñ */
+		if (i < NR_TASKS) {	/* ä»»åŠ¡ */
 			p_task		= task_table + i;
 			privilege	= PRIVILEGE_TASK;
 			rpl		= RPL_TASK;
 			eflags		= 0x1202;	/* IF=1, IOPL=1, bit 2 is always 1 */
 		}
-		else {			/* ÓÃ»§½ø³Ì */
+		else {			/* ç”¨æˆ·è¿›ç¨‹ */
 			p_task		= user_proc_table + (i - NR_TASKS);
 			privilege	= PRIVILEGE_USER;
 			rpl		= RPL_USER;
@@ -129,7 +129,7 @@ PUBLIC int tinix_main()
 		selector_ldt += 1 << 3;
 	}
 
-	//ÐÞ¸ÄÕâÀïµÄÓÅÏÈ¼¶ºÍticks
+	//ä¿®æ”¹è¿™é‡Œçš„ä¼˜å…ˆçº§å’Œticks
 	proc_table[0].priority = 15;
 	proc_table[1].priority =  5;
 	proc_table[2].priority =  2;
@@ -138,13 +138,13 @@ PUBLIC int tinix_main()
 	proc_table[5].priority =  10;
 	proc_table[6].priority =  10;
 
-	//¶ÔÓÅÏÈ¶ÓÁÐ³õÊ¼»¯
+
 	firstLen=firstHead=secondLen=thirdLen=0;
 	for (i=0; i<NR_TASKS+NR_PROCS;i++)
 	{
 		addToQueue(proc_table+i);
 	}
-	//Ö¸¶¨¿ØÖÆÌ¨
+	//æŒ‡å®šæŽ§åˆ¶å°
 	proc_table[1].nr_tty = 0;
 	proc_table[2].nr_tty = 1;
 	proc_table[3].nr_tty = 1;
@@ -186,7 +186,7 @@ void help()
 	printf("      *////  help         --------  shwo the help menu     ////*\n");
 	printf("      *////  clear        --------  clear screen           ////*\n");
 	printf("      *////  alt+F2       --------  show the process run   ////*\n");
-	printf("      *////  alt+F3       --------  goBang game            ////*\n");
+	printf("      *////  game         --------  game                   ////*\n");
 	printf("      *////  alt+F4       --------  guess number game      ////*\n");
 	printf("      *////  kill 2~5     --------  kill the process 2~5   ////*\n");
 	printf("      *////  start 2~5    --------  start the process 2~5  ////*\n");
@@ -265,8 +265,7 @@ void dealWithCommand(char* command)
 		show();
 		return ;
 	}
-
-	char str[10] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0',};
+	char str[100];
 	int number;
 	readOneStringAndOneNumber(command,str,& number);
 	if (strcmp(str,"kill")==0)
@@ -298,7 +297,7 @@ void dealWithCommand(char* command)
 		}
 		else if (2<=number && number <=5)
 		{
-			proc_table[number].state=kRUNNING;
+			proc_table[number].state=kRUNNABLE;
 			printf("start process %d successful\n",number);
 		}
 		return ;
@@ -331,7 +330,7 @@ void TestB()
 {
 	int i = 0;
 	while(1){
-		printf("This is TestB\n");
+		printf("B");
 		milli_delay(1000);
 	}
 }
@@ -345,7 +344,7 @@ void TestC()
 {
 	int i = 0;
 	while(1){
-		printf("This is TestC\n");
+		printf("C");
 		milli_delay(1000);
 	}
 }
@@ -355,7 +354,7 @@ void TestD()
 	int i=0;
 	while (1)
 	{
-		printf("This is TestD\n");
+		printf("D");
 		milli_delay(1000);
 	}
 }
@@ -365,434 +364,75 @@ void TestE()
 	int i=0;
 	while (1)
 	{
-		printf("This is TestE\n");
+		printf("E");
 		milli_delay(1000);
 	}
 }
 /*======================================================================*
-				goBangGame
+				Game2048
 *=======================================================================*/
-char gameMap[15][15];
+
 TTY *goBangGameTty=tty_table+2;
 
-void readTwoNumber(int* x,int* y)
-{
-	int i=0;
-	*x=0;
-	*y=0;
-	for (i=0; i<goBangGameTty->len && goBangGameTty->str[i]==' '; i++);
-	for (; i<goBangGameTty->len && goBangGameTty->str[i]!=' '  && goBangGameTty->str[i]!='\n'; i++)
-	{
-		*x=(*x)*10+(int) goBangGameTty->str[i]-48;
-	}
-	for (i; i<goBangGameTty->len && goBangGameTty->str[i]==' '; i++);
-	for (; i<goBangGameTty->len && goBangGameTty->str[i]!=' ' && goBangGameTty->str[i]!='\n'; i++)
-	{
-		*y=(*y)*10+(int) goBangGameTty->str[i]-48;
-	}
-}
-
-int max(int x,int y)
-{
-	return x>y?x:y;
-}
-
-int selectPlayerOrder()
-{
-	printf("o player\n");
-	printf("* computer\n");
-	printf("who play first?[1/user  other/computer]");
-	openStartScanf(goBangGameTty);
-	while (goBangGameTty->startScanf) ;
-	if (strcmp(goBangGameTty->str,"1")==0) return 1;
-	else return 0;
-}
 
 void displayGameState()
 {
+
 	sys_clear(goBangGameTty);
-	int n=15;
-	int i,j;
-	for (i=0; i<=n; i++)
-	{
-		if (i<10) printf("%d   ",i);
-		else printf("%d  ",i);
-	}
-	printf("\n");
-	for (i=0; i<n; i++)
-	{
-		if (i<9) printf("%d   ",i+1);
-		else printf("%d  ",i+1);
-		for (j=0; j<n; j++)
-		{
-			if (j<10) printf("%c   ",gameMap[i][j]);
-			else printf("%c   ",gameMap[i][j]);
-		}
-		printf("\n");
-	}
+	disp_str("start");
 
 }
 
-int checkParameter(int x, int y)	//¼ì²éÍæ¼ÒÊäÈëµÄ²ÎÊýÊÇ·ñÕýÈ·
-{
-	int n=15;
-	if (x<0 || y<0 || x>=n || y>=n) return 0;
-	if (gameMap[x][y]!='_') return 0;
-	return 1;
-}
 
-//¸üÐÂµÄÎ»ÖÃÎªx£¬y£¬Òò´Ë Ö»Òª¼ì²é×ø±êÎªx£¬yµÄÎ»ÖÃ
-int win(int x,int y)		//Ê¤Àû·µ»Ø1    ·ñÔò0£¨Ä¿Ç°ÎÞÈË»ñÊ¤£©
-{
-	int n=15;
-	int i,j;
-	int gameCount;
-	//×óÓÒÀ©Õ¹
-	gameCount=1;
-	for (j=y+1; j<n; j++)
-	{
-		if (gameMap[x][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (j=y-1; j>=0; j--)
-	{
-		if (gameMap[x][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
 
-	//ÉÏÏÂÀ©Õ¹
-	gameCount=1;
-	for (i=x-1; i>0; i--)
-	{
-		if (gameMap[i][y]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (i=x+1; i<n; i++)
-	{
-		if (gameMap[i][y]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	//Õý¶Ô½ÇÏßÀ©Õ¹
-	gameCount=1;
-	for (i=x-1,j=y-1; i>=0 && j>=0; i--,j--)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (i=x+1,j=y+1; i<n && j<n; i++,j++)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	//¸º¶Ô½ÇÏßÀ©Õ¹
-	gameCount=1;
-	for (i=x-1,j=y+1; i>=0 && j<n; i--,j++)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	for (i=x+1,j=y-1; i<n && j>=0; i++,j--)
-	{
-		if (gameMap[i][j]==gameMap[x][y]) gameCount++;
-		else break;
-	}
-	if (gameCount>=5) return 1;
-
-	return 0;
-}
-
-void free1(int x,int y1,int y2,int* ff1,int* ff2)
-{
-	int n=15;
-	int i;
-	int f1=0,f2=0;
-	for (i=y1; i>=0; i++)
-	{
-		if (gameMap[x][i]=='_') f1++;
-		else break;
-	}
-	for (i=y2; i<n; i++)
-	{
-		if (gameMap[x][i]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-void free2(int x1,int x2,int y,int *ff1,int *ff2)
-{
-	int n=15;
-	int i;
-	int f1=0,f2=0;
-	for (i=x1; i>=0; i--)
-	{
-		if (gameMap[i][y]=='_') f1++;
-		else break;
-	}
-	for (i=x2; i<n; i++)
-	{
-		if (gameMap[i][y]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-void free3(int x1,int y1,int x2,int y2,int *ff1,int *ff2)
-{
-	int n=15;
-	int x,y;
-	int f1=0;
-	int f2=0;
-	for (x=x1,y=y1; 0<=x && 0<=y; x--,y--)
-	{
-		if (gameMap[x][y]=='_') f1++;
-		else break;
-	}
-	for (x=x2,y=y2; x<n &&  y<n; x++,y++)
-	{
-		if (gameMap[x][y]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-void free4(int x1,int y1,int x2,int y2,int *ff1,int *ff2)
-{
-	int n=15;
-	int x,y;
-	int f1=0,f2=0;
-	for (x=x1,y=y1; x>=0 && y<n; x--,y++)
-	{
-		if (gameMap[x][y]=='_') f1++;
-		else break;
-	}
-	for (x=x2,y=y2; x<n && y>=0; x++,y--)
-	{
-		if (gameMap[x][y]=='_') f2++;
-		else break;
-	}
-	*ff1=f1;
-	*ff2=f2;
-}
-
-int getPossibleByAD(int attack,int defence,int attackFree1,int attackFree2,int defenceFree1,int defenceFree2)
-{
-	if (attack>=5) return 20;						//5¹¥»÷
-	if (defence>=5) return 19;						//5·ÀÓù
-	if (attack==4 && (attackFree1>=1 && attackFree2>=1)) return 18;		//4¹¥»÷ 2±ß
-	if (attack==4 && (attackFree1>=1 || attackFree2>=1)) return 17;		//4¹¥»÷ 1±ß
-	if (defence==4 && (defenceFree1>=1 || defenceFree2>=1)) return 16;	//4·ÀÓù
-	if (attack==3 && (attackFree1>=2 && attackFree2>=2)) return 15;		//3¹¥»÷ 2±ß
-	if (defence==3 && (defenceFree1>=2 && defenceFree2>=2)) return 14;	//3·ÀÓù 2±ß
-	if (defence==3 && (defenceFree1>=2 || defenceFree2>=2)) return 13;	//3·ÀÓù 1±ß
-	if (attack==3 && (attackFree1>=2 || attackFree2>=2)) return 12;		//3¹¥»÷ 1±ß
-	if (attack==2 && (attackFree1>=3 && attackFree2>=3)) return 11;		//2¹¥»÷ 2±ß
-	if (defence==2 && defenceFree1+defenceFree2>=3) return 10;	//2·ÀÓù 2±ß
-	if (defence==2 && defenceFree1+defenceFree2>=3) return 9;		//2·ÀÓù 1±ß
-	if (attack==1 && attackFree1+attackFree2>=4) return 8;
-	if (defence==1 && defenceFree1+defenceFree2>=4) return 7;
-	return 6;
-}
-
-int getPossible(int x,int y)
-{
-	int n=15;
-	int attack;
-	int defence;
-	int attackFree1;
-	int defenceFree1;
-	int attackFree2;
-	int defenceFree2;
-	int possible=-100;
-
-	//×óÓÒÀ©Õ¹
-	int al,ar;
-	int dl,dr;
-	//ºáÏò¹¥»÷
-	for (al=y-1; al>=0; al--)
-	{
-		if (gameMap[x][al]!='*') break;
-	}
-	for (ar=y+1; ar<n; ar++)
-	{
-		if (gameMap[x][ar]!='*') break;
-	}
-	//ºáÏò·ÀÊØ
-	for (dl=y-1; dl>=0; dl--)
-	{
-		if (gameMap[x][dl]!='o') break;
-	}
-	for (dr=y+1; dr<n; dr++)
-	{
-		if (gameMap[x][dr]!='o') break;
-	}
-	attack=ar-al-1;
-	defence=dr-dl-1;
-	free1(x,al,ar,&attackFree1,&attackFree2);
-	free1(x,dl,dr,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree2,defenceFree1,defenceFree2));
-
-	//ÊúÏò½ø¹¥
-	for (al=x-1; al>=0; al--)
-	{
-		if (gameMap[al][y]!='*') break;
-	}
-	for (ar=x+1; ar<n; ar++)
-	{
-		if (gameMap[ar][y]!='*') break;
-	}
-	//ÊúÏò·ÀÊØ
-	for (dl=x-1; dl>=0; dl--)
-	{
-		if (gameMap[dl][y]!='o') break;
-	}
-	for (dr=x+1; dr<n; dr++)
-	{
-		if (gameMap[dr][y]!='o') break;
-	}
-	attack=ar-al-1;
-	defence=dr-dl-1;
-	free2(al,ar,y,&attackFree1,&attackFree2);
-	free2(dl,dr,y,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree2,defenceFree1,defenceFree2));
-
-	//Õý¶Ô½ÇÏß½ø¹¥
-	int al1,al2,ar1,ar2;
-	int dl1,dl2,dr1,dr2;
-	for (al1=x-1,al2=y-1; al1>=0 && al2>=0; al1--,al2--)
-	{
-		if (gameMap[al1][al2]!='*') break;
-	}
-	for (ar1=x+1,ar2=y+1; ar1<n && ar2<n; ar1++,ar2++)
-	{
-		if (gameMap[ar1][ar2]!='*') break;
-	}
-	//Õý¶Ô½ÇÏß·ÀÊØ
-	for (dl1=x-1,dl2=y-1; dl1>=0 && dl2>=0; dl1--,dl2--)
-	{
-		if (gameMap[dl1][dl2]!='o') break;
-	}
-	for (dr1=x+1,dr2=y+1; dr1<n && dr2<n; dr1++,dr2++)
-	{
-		if (gameMap[dr1][dr2]!='o') break;
-	}
-	attack=ar1-al1-1;
-	defence=dr1-dl1-1;
-	free3(al1,al2,ar1,ar2,&attackFree1,&attackFree2);
-	free3(dl1,dl2,dr1,dr2,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree1,defenceFree1,defenceFree2));
-
-	//¸º¶Ô½ÇÏß½ø¹¥
-	for (al1=x-1,al2=y+1; al1>=0 && al2<n; al1--,al2++)
-	{
-		if (gameMap[al1][al2]!='*') break;
-	}
-	for (ar1=x+1,ar2=y-1; ar1<n && ar2>=0; ar1++,ar2--)
-	{
-		if (gameMap[ar1][ar2]!='*') break;
-	}
-	//¸º¶Ô½ÇÏß·ÀÊØ
-	for (dl1=x-1,dl2=y+1; dl1>=0 && dl2<n; dl1--,dl2++)
-	{
-		if (gameMap[dl1][dl2]!='o') break;
-	}
-	for (dr1=x+1,dr2=y-1; dr1<n && dr2>=0; dr1++,dr2--)
-	{
-		if (gameMap[dr1][dr2]!='o') break;
-	}
-	attack=ar1-al1-1;
-	defence=dr1-dl1-1;
-	free4(al1,al2,ar1,ar2,&attackFree1,&attackFree2);
-	free4(dl1,dl2,dr1,dr2,&defenceFree1,&defenceFree2);
-	possible=max(possible,getPossibleByAD(attack,defence,attackFree1,attackFree2,defenceFree1,defenceFree2));
-	return possible;
-}
-
+/*======================================================================*
+				Calender of July, 2015
+*=======================================================================*/
 
 void goBangGameStart()
 {
-	int playerStep=0;
-	int computerStep=0;
-	int n=15;
-	int i,j;
 	while (1)
 	{
-	for (i=0; i<n; i++)
-		for (j=0; j<n; j++)
-			gameMap[i][j]='_';
-
-
-	if (selectPlayerOrder()==0)
-	{
-		gameMap[n>>1][n>>1]='*';
-		displayGameState();
-		printf("[computer step:%d]%d,%d\n",++computerStep,(n>>1)+1,(n>>1)+1);
-	}
-	else
-	{
-		displayGameState();
-	}
-
-	while (1)
-	{
-		int x,y;
-		while (1)
-		{
-			printf("[player step:%d]",++playerStep);
-			//scanf("%d%d",&x,&y);
-			openStartScanf(goBangGameTty);
-			while (goBangGameTty->startScanf) ;
-			readTwoNumber(&x,&y);
-			x--,y--;
-			if ( checkParameter(x,y) )
+		
+		int a,b,c,d,e,f,i,j,k,n,m,year;
+		b=2015;
+		c=year%4;
+		d=year/4;
+		e=d*1461+c*365;
+		f=e%7;
+		j=f;         
+		m=j;
+		printf("*****The calendar of 2015.7*****\n");
+		for(a=1;a<=12;a++)   
+   		{
+			if(a==7)
 			{
-				gameMap[x][y]='o';
-				break;
-			}
-			else
-			{
-				playerStep--;
-				printf("the position you put error\n");
-			}
-		}
-		if (win(x,y))
-		{
-			displayGameState();
-			printf("Congratulation you won the game\n");
-			break;
-		}
-		int willx,willy,winPossible=-100;
-		for (i=0; i<n; i++)
-			for (j=0; j<n; j++)
-			{
-				if (gameMap[i][j]=='_')
-				{
-					int possible=getPossible(i,j);
-					if (possible>=winPossible)
-					{
-						willx=i; willy=j;
-						winPossible=possible;
-					}
-				}
-			}
-			gameMap[willx][willy]='*';
-			displayGameState();
-			printf("[computer step:%d]%d,%d\n",++computerStep,willx+1,willy+1);
-			if (win(willx,willy))
-			{
-				printf("Sorry you lost the game\n");
-				break;
-			}
-	}
-	}
+    				if(a==1||a==3||a==5||a==7||a==8||a==10||a==12)k=31;
+    				else if(a==4||a==6||a==9||a==11)k=30;
+         			else if((year%4==0&&year%100!=0)||(year%400==0))k=29;           
+              			else k=28;
+    				printf("                      %dJuly                    \n",a);
+    				printf("   STAT    SUN    MON    TUE    WED   THUR    FRI\n");
+   				m=j;
+    				if(m<=5)m=m+1;
+    				else m=m-6;
 
+    				for(n=1;n<=m;n++)printf("       ");
+
+    				for(i=1;i<=k;i++,j++)
+       				{
+					if(j==7)j=0;
+        				if(i<10)printf("      %d",i);
+        				else printf("     %d",i);
+        				if(j==5)printf("\n");
+       				}
+    				printf("\n\n\n");
+			}
+
+   		}
+		//sys_clear(goBangGameTty);
+
+	}
 }
+
 
