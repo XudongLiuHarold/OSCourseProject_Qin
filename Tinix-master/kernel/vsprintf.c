@@ -10,7 +10,7 @@
 #include "string.h"
 
 /*
- *  ä¸ºæ›´å¥½åœ°ç†è§£æ­¤å‡½æ•°çš„åŸç†ï¼Œå¯å‚è€ƒ printf çš„æ³¨é‡Šéƒ¨åˆ†ã€‚
+ *  Îª¸üºÃµØÀí½â´Ëº¯ÊıµÄÔ­Àí£¬¿É²Î¿¼ printf µÄ×¢ÊÍ²¿·Ö¡£
  */
 
 /*======================================================================*
@@ -41,13 +41,13 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 		case 'D':
 		case 'd':
 		{		
-			itoa_dec(tmp, *((int*)p_next_arg));//æŠŠä¸€æ•´æ•°è½¬æ¢ä¸ºå­—ç¬¦ä¸²
+			itoa_dec(tmp, *((int*)p_next_arg));//°ÑÒ»ÕûÊı×ª»»Îª×Ö·û´®
 			strcpy(p, tmp);
 			p_next_arg += 4;
 			p += strlen(tmp);
 			break;
 		}
-		case 'c'://è¾“å‡ºä¸€ä¸ªå­—ç¬¦
+		case 'c'://Êä³öÒ»¸ö×Ö·û
 		{
 			*p++=*p_next_arg;
 			p_next_arg+=4;
