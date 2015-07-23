@@ -81,6 +81,26 @@ PUBLIC int tinix_main()
 	disp_str("*            **        ******    **      ***    ******   **      **   \n");
 	disp_str("*                                                                     \n");
 	disp_str("**********************************************************************\n");
+	//disp_color_str("Hello World1\n", 0x1);//blue
+	// disp_color_str("Hello World2\n", 0x2);//green
+	// disp_color_str("Hello World3\n", 0x3);//blueness
+	// disp_color_str("Hello World4\n", 0x4);//red
+	// disp_color_str("Hello World5\n", 0x5);//pink
+	// disp_color_str("Hello World6\n", 0x6);//brown
+	// disp_color_str("Hello World7\n", 0x7);//gray
+	// disp_color_str("Hello World8\n", 0x8);//dark gray
+	// disp_color_str("Hello World9\n", 0x9);//light blue
+	// disp_color_str("Hello WorldA\n", 0xA);//light green
+	// disp_color_str("Hello WorldB\n", 0xB);//light blueness
+	// disp_color_str("Hello WorldC\n", 0xC);//light red
+	// disp_color_str("Hello WorldD\n", 0xD);//light pink
+	// disp_color_str("Hello WorldE\n", 0xE);//light yellow
+	// disp_color_str("Hello WorldF\n", 0xF);//white
+	// disp_color_str("Hello WorldAE\n", 0xAE);//back:green font:yellow flicker
+	// disp_color_str("Hello WorldAF\n", 0xAF);//back:green font:white flicker
+	// disp_color_str("Hello WorldBE\n", 0xBE);//back:blueness font:yellow flicker
+	// disp_color_str("Hello WorldBF\n", 0xBF);//back:blueness font:white flicker
+	
 	TASK*		p_task;
 	PROCESS*	p_proc		= proc_table;
 	char*		p_task_stack	= task_stack + STACK_SIZE_TOTAL;
@@ -330,7 +350,7 @@ void TestB()
 {
 	int i = 0;
 	while(1){
-		printf("B");
+		printf("This is B\n");
 		milli_delay(1000);
 	}
 }
@@ -344,7 +364,7 @@ void TestC()
 {
 	int i = 0;
 	while(1){
-		printf("C");
+		printf("This is C\n");
 		milli_delay(1000);
 	}
 }
@@ -354,7 +374,7 @@ void TestD()
 	int i=0;
 	while (1)
 	{
-		printf("D");
+		printf("This is D\n");
 		milli_delay(1000);
 	}
 }
@@ -364,7 +384,7 @@ void TestE()
 	int i=0;
 	while (1)
 	{
-		printf("E");
+		printf("This is E\n");
 		milli_delay(1000);
 	}
 }
