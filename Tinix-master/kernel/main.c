@@ -827,6 +827,7 @@ int goBangGame()
     menu();                     //调用主菜单函数
     while(1);
     return 0;
+}
 int getRandom() {
 	return ticks%3;
 }
