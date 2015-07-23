@@ -156,7 +156,7 @@ PUBLIC int tinix_main()
 	proc_table[3].priority =  3;
 	proc_table[4].priority =  7;
 	proc_table[5].priority =  10;
-	proc_table[6].priority =  10;
+	proc_table[6].priority =  10;//calendar
 
 
 	firstLen=firstHead=secondLen=thirdLen=0;
@@ -170,7 +170,7 @@ PUBLIC int tinix_main()
 	proc_table[3].nr_tty = 1;
 	proc_table[4].nr_tty = 1;
 	proc_table[5].nr_tty = 1;
-	proc_table[6].nr_tty = 2;
+	proc_table[6].nr_tty = 2; //calendar Alt+F3
 
 	k_reenter	= 0;
 	ticks		= 0;
@@ -206,8 +206,7 @@ void help()
 	printf("      *////  help         --------  shwo the help menu     ////*\n");
 	printf("      *////  clear        --------  clear screen           ////*\n");
 	printf("      *////  alt+F2       --------  show the process run   ////*\n");
-	printf("      *////  game         --------  game                   ////*\n");
-	printf("      *////  alt+F4       --------  guess number game      ////*\n");
+	printf("      *////  alt+F3       --------  calendar               ////*\n");
 	printf("      *////  kill 2~5     --------  kill the process 2~5   ////*\n");
 	printf("      *////  start 2~5    --------  start the process 2~5  ////*\n");
 	printf("      *////  show         --------  show the process state ////*\n");
@@ -403,17 +402,16 @@ void displayGameState()
 
 }
 
+void goBangGameStart()
+{}
 
 
 /*======================================================================*
 				Calender of July, 2015
 *=======================================================================*/
 
-void goBangGameStart()
+void calendar()
 {
-	while (1)
-	{
-		
 		int a,b,c,d,e,f,i,j,k,n,m,year;
 		b=2015;
 		c=year%4;
@@ -450,9 +448,7 @@ void goBangGameStart()
 			}
 
    		}
-		//sys_clear(goBangGameTty);
-
-	}
+	while(1);
 }
 
 
