@@ -849,7 +849,7 @@ int getUserInput() {
 		return 0;
 	}
 	else {
-		printf("您的输入有误\n");
+		printf("Your input is error\n");
 		return -1;
 	}
 }
