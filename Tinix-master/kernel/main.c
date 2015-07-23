@@ -26,7 +26,7 @@ int strcmp(char *str1,char *str2)
 		if (str1[i]>str2[i]) return 1;
 		else if (str1[i]<str2[i]) return -1;
 	}
-	return 0;
+	return 0; 
 }
 
 void strlwr(char *str)
@@ -139,7 +139,8 @@ PUBLIC int tinix_main()
 	proc_table[4].priority =  7;
 	proc_table[5].priority =  10;
 	proc_table[6].priority =  10;//calendar
-	proc_table[7].priority =  14;//2048
+	proc_table[7].priority =  20;//guess
+	proc_table[8].priority =  14;//2048
 
 
 	firstLen=firstHead=secondLen=thirdLen=0;
@@ -154,7 +155,8 @@ PUBLIC int tinix_main()
 	proc_table[4].nr_tty = 1;
 	proc_table[5].nr_tty = 1;
 	proc_table[6].nr_tty = 2; //calendar Alt+F3
-	proc_table[7].nr_tty = 4; //calendar Alt+F5
+    proc_table[7].nr_tty = 3;//guss game Alt+F4
+	proc_table[8].nr_tty = 4; //2048 Alt+F5
 
 	k_reenter	= 0;
 	ticks		= 0;
@@ -371,20 +373,62 @@ void TestE()
 		milli_delay(1000);
 	}
 }
+
+
 /*======================================================================*
-				Game2048
+				guess game
 *=======================================================================*/
-
-TTY *gameTty = tty_table+4;
-
-/*void displayGameState()
+TTY *gussTTy = tty_table+3;
+void guess()
 {
+	char gamer;  // 玩家出拳
+    int computer;  // 电脑出拳
+    int result;  // 比赛结果
 
-	sys_clear(goBangGameTty);
-	disp_str("start");
+    // 为了避免玩一次游戏就退出程序，可以将代码放在循环中
+    while (1){
+        printf("This is a guess game, please input your choice: ");
+        printf("\nA:scissors\nB:stone\nC:cloth\nD:end game\n");
+        do 
+        {
+        	gamer = getUserInput();
+        }
+        while(gamer == -1);
+        if (gamer == 0)
+        {
+        	return;
+        }
+       
+        computer=getRandom();  // 产生随机数并取余，得到电脑出拳
+        result=gamer+computer;  
+        printf("Computer....:");
+        switch (computer)
+        {
+            case 0:printf("scissors\n");break; //4    1
+            case 1:printf("stone\n");break; //7  2
+            case 2:printf("cloth\n");break;   //10 3
+        }
+        printf("Your....:");
+        switch (gamer)
+        {
+            case 4:printf("scissors\n");break;
+            case 7:printf("stone\n");break;
+            case 10:printf("cloth\n");break;
+        }
+        if (result==6||result==7||result==11) printf("You win!\n");
+        else if (result==5||result==9||result==10) printf("Computer win!\n");
+        else printf("deuce\n");
 
-}*/
+        milli_delay(1000);
+        clearScreen();  // 暂停并清屏
+    }
+}
 
+
+/*======================================================================*
+ Game2048
+ *=======================================================================*/
+TTY *gameTty = tty_table+4;
 
 int num[4][4];
 int score, gameover, ifappear, gamew, gamef,move;
@@ -783,52 +827,167 @@ int goBangGame()
     menu();                     //调用主菜单函数
     while(1);
     return 0;
+int getRandom() {
+	return ticks%3;
+}
+
+int getUserInput() {
+	openStartScanf(gussTTy);
+	while(gussTTy->startScanf) ;
+	if (strcmp(gussTTy->str, "a") == 0)
+	{
+		return 4;
+	}
+	else if (strcmp(gussTTy->str, "b") == 0) {
+		return 7;
+	}
+	else if (strcmp(gussTTy->str, "c") == 0) {
+		return 10;
+	}
+	else if (strcmp(gussTTy->str, "d") == 0) {
+		return 0;
+	}
+	else {
+		printf("您的输入有误\n");
+		return -1;
+	}
 }
 
 
 /*======================================================================*
 				Calender of July, 2015
 *=======================================================================*/
-
+TTY *goBangGameTty=tty_table+2;
+#define N 7
+void readTwoNumber(int* x,int* y)
+{
+	int i=0;
+	*x=0;
+	*y=0;
+	for (i=0; i<goBangGameTty->len && goBangGameTty->str[i]==' '; i++);
+	for (; i<goBangGameTty->len && goBangGameTty->str[i]!=' '  && goBangGameTty->str[i]!='\n'; i++)
+	{
+		*x=(*x)*10+(int) goBangGameTty->str[i]-48;
+	}
+	for (i; i<goBangGameTty->len && goBangGameTty->str[i]==' '; i++);
+	for (; i<goBangGameTty->len && goBangGameTty->str[i]!=' ' && goBangGameTty->str[i]!='\n'; i++)
+	{
+		*y=(*y)*10+(int) goBangGameTty->str[i]-48;
+	}
+}
 void calendar()
 {
-		int a,b,c,d,e,f,i,j,k,n,m,year;
-		b=2015;
-		c=year%4;
-		d=year/4;
-		e=d*1461+c*365;
-		f=e%7;
-		j=f;         
-		m=j;
-		printf("*****The calendar of 2015.7*****\n");
-		for(a=1;a<=12;a++)   
-   		{
-			if(a==7)
+		int year, month, x, y;
+		while (1)
+		{
+			while (1)
 			{
-    				if(a==1||a==3||a==5||a==7||a==8||a==10||a==12)k=31;
-    				else if(a==4||a==6||a==9||a==11)k=30;
-         			else if((year%4==0&&year%100!=0)||(year%400==0))k=29;           
-              			else k=28;
-    				printf("                      %dJuly                    \n",a);
-    				printf("   STAT    SUN    MON    TUE    WED   THUR    FRI\n");
-   				m=j;
-    				if(m<=5)m=m+1;
-    				else m=m-6;
-
-    				for(n=1;n<=m;n++)printf("       ");
-
-    				for(i=1;i<=k;i++,j++)
-       				{
-					if(j==7)j=0;
-        				if(i<10)printf("      %d",i);
-        				else printf("     %d",i);
-        				if(j==5)printf("\n");
-       				}
-    				printf("\n\n\n");
+				printf("Please input the year and month: ");
+				openStartScanf(goBangGameTty);
+				while (goBangGameTty->startScanf) ;
+				readTwoNumber(&x,&y);	
+				year=x;
+				month=y;
+				rili(year,month);
 			}
-
-   		}
-	while(1);
+		}
 }
 
+void print(int day,int tian)
+{
+    int a[N][N],i,j,sum=1;
+    for(i=0,j=0;j<7;j++)
+    {
+        if(j<day)
+        printf("      ");
+        else
+        {
+            a[i][j]=sum;
+            printf("    %d",sum++);
+            
+        }
+    }
+    printf("\n");
+    for(i=1;sum<=tian;i++)
+    {
+        for(j=0;sum<=tian&&j<7;j++)
+        {
+                a[i][j]=sum;
+                printf("    %d",sum++);
+        }
+        printf("\n");
+    }
+}
 
+int duo(int year)
+{
+    if(year%4==0&&year%100!=0||year%400==0)
+    return 1;
+    else
+    return 0;
+}
+
+int rili(int year,int month)
+{
+   int day,tian,preday,strday;
+   printf("***************%dmonth  %dyear*********\n",month,year);
+   printf("  SUN    MON    TUE   WED   THUR   FRI   STAT\n");
+   switch(month)
+   {
+   case 1:
+    tian=31;
+    preday=0;
+   break;
+   case 2:
+        tian=28;
+        preday=31;
+    break;
+    case 3:
+        tian=31;
+        preday=59;
+    break;
+    case 4:
+        tian=30;
+        preday=90;
+    break;
+    case 5:
+        tian=31;
+        preday=120;
+    break;
+    case 6:
+        tian=30;
+        preday=151;
+    break;
+    case 7:
+        tian=31;
+        preday=181;
+    break;
+    case 8:
+        tian=31;
+        preday=212;
+    break;
+    case 9:
+        tian=30;
+        preday=243;
+    break;
+    case 10:
+        tian=31;
+        preday=273;
+    break;
+    case 11:
+        tian=30;
+        preday=304;
+    break;
+    default:
+        tian=31;
+        preday=334;
+    }
+    if(duo(year)&&month>2)
+    	preday++;
+
+    if(duo(year)&&month==2)
+    	tian=29;
+
+    day=((year-1)*365+(year-1)/4-(year-1)/100+(year-1)/400+preday+1)%7;    
+    print(day,tian);
+}
