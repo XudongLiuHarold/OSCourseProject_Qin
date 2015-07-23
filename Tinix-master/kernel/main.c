@@ -189,20 +189,23 @@ void clearScreen()
 
 void help()
 {
-	printf("           *////////////////////////////////////////////*/\n");
-	printf("                   design by Doubi && LiangPuHe         \n");
-	printf("           *////////////////////////////////////////////*/\n");
-	printf("\n");
-	printf("      *////////////////////////////////////////////////////////*\n");
-	printf("      *////  help         --------  shwo the help menu     ////*\n");
-	printf("      *////  clear        --------  clear screen           ////*\n");
-	printf("      *////  alt+F2       --------  show the process run   ////*\n");
-	printf("      *////  alt+F3       --------  calendar               ////*\n");
-	printf("      *////  kill 2~5     --------  kill the process 2~5   ////*\n");
-	printf("      *////  start 2~5    --------  start the process 2~5  ////*\n");
-	printf("      *////  show         --------  show the process state ////*\n");
-	printf("      *////////////////////////////////////////////////////////*\n");
-	printf("\n");
+	clearScreen();
+	disp_color_str("           *////////////////////////////////////////////*/\n", 0xE);
+	disp_color_str("                   design by Bruno && Teng && Henry         \n", 0x8B);
+	disp_color_str("           *////////////////////////////////////////////*/\n", 0xE);
+	disp_color_str("\n", 0x1);
+	disp_color_str("      *////////////////////////////////////////////////////////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  help         --------  shwo the help menu", 0xB);disp_color_str("     ////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  alt+F2       --------  show the process run", 0xB);disp_color_str("   ////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  alt+F3       --------  calendar    ", 0xB);disp_color_str("           ////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  alt+F4       --------  guess game  ", 0xB);disp_color_str("           ////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  alt+F5       --------  2048 game   ", 0xB);disp_color_str("           ////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  kill 2~5     --------  kill the process 2~5", 0xB);disp_color_str("   ////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  start 2~5    --------  start the process 2~5  ", 0xB);disp_color_str("////*\n", 0xE);
+	disp_color_str("      *////", 0xE);disp_color_str("  show         --------  show the process state", 0xB);disp_color_str(" ////*\n", 0xE);
+	disp_color_str("      *////////////////////////////////////////////////////////*\n", 0xE);
+	disp_color_str("\n", 0x1);
+    disp_color_str("====================================",0x04);disp_color_str("===================================\n",0x04);	TASK*		p_task;
 }
 
 void show()
@@ -225,8 +228,8 @@ void show()
 			printf("    Ready\n");
 			break;
 		}
-		printf(p->whichQueue);
-		printf("\n");
+		// printf(p->whichQueue);
+		// printf("\n");
 	}
 }
 
@@ -307,7 +310,7 @@ void dealWithCommand(char* command)
 		}
 		else if (2<=number && number <=5)
 		{
-			proc_table[number].state=kRUNNABLE;
+			proc_table[number].state=kRUNNING;
 			printf("start process %d successful\n",number);
 		}
 		return ;
@@ -324,7 +327,7 @@ void Terminal()
 	p_tty->startScanf=0;
 	while(1)
 	{
-		printf("DB=>");
+		printf("bochs:-$ ");
 		//printf("<Ticks:%x>", get_ticks());
 		openStartScanf(p_tty);
 		while (p_tty->startScanf) ;
@@ -899,31 +902,39 @@ void calendar()
 		}
 }
 
+
 void print(int day,int tian)
-{
-    int a[N][N],i,j,sum=1;
-    for(i=0,j=0;j<7;j++)
-    {
-        if(j<day)
-        printf("      ");
-        else
-        {
-            a[i][j]=sum;
-            printf("    %d",sum++);
-            
-        }
-    }
-    printf("\n");
-    for(i=1;sum<=tian;i++)
-    {
-        for(j=0;sum<=tian&&j<7;j++)
-        {
-                a[i][j]=sum;
-                printf("    %d",sum++);
-        }
-        printf("\n");
-    }
-}
+	{
+		int a[N][N],i,j,sum=1;
+		for(i=0,j=0;j<7;j++)
+		{
+			if(j<day)
+				printf("    ");
+			else
+			{
+				a[i][j]=sum;
+				printf("   %d",sum++);
+				// printf("aaa\n");
+			}
+		}
+		printf("\n");
+		for(i=1;sum<=tian;i++)
+		{
+			for(j=0;sum<=tian&&j<7;j++)
+			{
+				a[i][j]=sum;
+				if (sum<10)
+				{
+					printf("   %d", sum++);
+				}
+				else{
+					printf("  %d",sum++);
+				}
+			}
+			printf("\n");
+		}
+	}
+
 
 int duo(int year)
 {
@@ -936,8 +947,8 @@ int duo(int year)
 int rili(int year,int month)
 {
    int day,tian,preday,strday;
-   printf("***************%dmonth  %dyear*********\n",month,year);
-   printf("  SUN    MON    TUE   WED   THUR   FRI   STAT\n");
+   printf("**********%dmonth  %dyear*********\n",month,year);
+   printf(" SUN MON TUE WED THU FRI SAT\n");
    switch(month)
    {
    case 1:
