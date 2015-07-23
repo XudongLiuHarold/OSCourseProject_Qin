@@ -81,26 +81,6 @@ PUBLIC int tinix_main()
 	disp_str("*            **        ******    **      ***    ******   **      **   \n");
 	disp_str("*                                                                     \n");
 	disp_str("**********************************************************************\n");
-	//disp_color_str("Hello World1\n", 0x1);//blue
-	// disp_color_str("Hello World2\n", 0x2);//green
-	// disp_color_str("Hello World3\n", 0x3);//blueness
-	// disp_color_str("Hello World4\n", 0x4);//red
-	// disp_color_str("Hello World5\n", 0x5);//pink
-	// disp_color_str("Hello World6\n", 0x6);//brown
-	// disp_color_str("Hello World7\n", 0x7);//gray
-	// disp_color_str("Hello World8\n", 0x8);//dark gray
-	// disp_color_str("Hello World9\n", 0x9);//light blue
-	// disp_color_str("Hello WorldA\n", 0xA);//light green
-	// disp_color_str("Hello WorldB\n", 0xB);//light blueness
-	// disp_color_str("Hello WorldC\n", 0xC);//light red
-	// disp_color_str("Hello WorldD\n", 0xD);//light pink
-	// disp_color_str("Hello WorldE\n", 0xE);//light yellow
-	// disp_color_str("Hello WorldF\n", 0xF);//white
-	// disp_color_str("Hello WorldAE\n", 0xAE);//back:green font:yellow flicker
-	// disp_color_str("Hello WorldAF\n", 0xAF);//back:green font:white flicker
-	// disp_color_str("Hello WorldBE\n", 0xBE);//back:blueness font:yellow flicker
-	// disp_color_str("Hello WorldBF\n", 0xBF);//back:blueness font:white flicker
-	
 	TASK*		p_task;
 	PROCESS*	p_proc		= proc_table;
 	char*		p_task_stack	= task_stack + STACK_SIZE_TOTAL;
@@ -349,7 +329,7 @@ void TestB()
 {
 	int i = 0;
 	while(1){
-		printf("This is B\n");
+		printf("B");
 		milli_delay(1000);
 	}
 }
@@ -363,7 +343,7 @@ void TestC()
 {
 	int i = 0;
 	while(1){
-		printf("This is C\n");
+		printf("C");
 		milli_delay(1000);
 	}
 }
@@ -373,7 +353,7 @@ void TestD()
 	int i=0;
 	while (1)
 	{
-		printf("This is D\n");
+		printf("D");
 		milli_delay(1000);
 	}
 }
@@ -383,7 +363,7 @@ void TestE()
 	int i=0;
 	while (1)
 	{
-		printf("This is E\n");
+		printf("E");
 		milli_delay(1000);
 	}
 }
@@ -402,7 +382,7 @@ void goBangGameStart()
 				Calender of July, 2015
 *=======================================================================*/
 TTY *goBangGameTty=tty_table+2;
-
+#define N 7
 void readTwoNumber(int* x,int* y)
 {
 	int i=0;
@@ -421,57 +401,117 @@ void readTwoNumber(int* x,int* y)
 }
 void calendar()
 {
-		int a,b,c,d,e,f,i,j,k,n,m,year,x,y;
+		int year, month, x, y;
 		while (1)
 		{
-		while (1)
-		{
-			printf("Please input the year and month: ");
-			openStartScanf(goBangGameTty);
-			while (goBangGameTty->startScanf) ;
-			readTwoNumber(&x,&y);
-			
-		year=x;
-		//m=y;
-		c=year%4;
-		printf("%d",c);
-		d=year/4;
-		printf("%d",d);
-		e=d*1461+c*365;
-		printf("%d",e);
-		f=e%7;
-		j=f;         
-		m=j;
-		printf("*****The calendar of 2015. %d *****\n",y);
-		for(a=1;a<=12;a++)   
-   		{
-			if(a==y)
+			while (1)
 			{
-    				if(a==1||a==3||a==5||a==7||a==8||a==10||a==12)k=31;
-    				else if(a==4||a==6||a==9||a==11)k=30;
-         			else if((year%4==0&&year%100!=0)||(year%400==0))k=29;           
-              			else k=28;
-    				printf("                      %d                    \n",y);
-    				printf("   STAT    SUN    MON    TUE    WED   THUR    FRI\n");
-   				m=j;
-    				if(m<=5)m=m+1;
-    				else m=m-6;
-
-    				for(n=1;n<=m;n++)
-					printf("       ");
-
-    				for(i=1;i<=k;i++,j++)
-       				{
-					if(j==7)j=0;
-        				if(i<10)printf("      %d",i);
-        				else printf("     %d",i);
-        				if(j==5)printf("\n");
-       				}
-    				printf("\n\n\n");
+				printf("Please input the year and month: ");
+				openStartScanf(goBangGameTty);
+				while (goBangGameTty->startScanf) ;
+				readTwoNumber(&x,&y);	
+				year=x;
+				month=y;
+				rili(year,month);
 			}
+		}
+}
 
-   		}
-	}
-	}
-	//while(1);
+void print(int day,int tian)
+{
+    int a[N][N],i,j,sum=1;
+    for(i=0,j=0;j<7;j++)
+    {
+        if(j<day)
+        printf("      ");
+        else
+        {
+            a[i][j]=sum;
+            printf("    %d",sum++);
+            
+        }
+    }
+    printf("\n");
+    for(i=1;sum<=tian;i++)
+    {
+        for(j=0;sum<=tian&&j<7;j++)
+        {
+                a[i][j]=sum;
+                printf("    %d",sum++);
+        }
+        printf("\n");
+    }
+}
+
+int duo(int year)
+{
+    if(year%4==0&&year%100!=0||year%400==0)
+    return 1;
+    else
+    return 0;
+}
+
+int rili(int year,int month)
+{
+   int day,tian,preday,strday;
+   printf("***************%dmonth  %dyear*********\n",month,year);
+   printf("  SUN    MON    TUE   WED   THUR   FRI   STAT\n");
+   switch(month)
+   {
+   case 1:
+    tian=31;
+    preday=0;
+   break;
+   case 2:
+        tian=28;
+        preday=31;
+    break;
+    case 3:
+        tian=31;
+        preday=59;
+    break;
+    case 4:
+        tian=30;
+        preday=90;
+    break;
+    case 5:
+        tian=31;
+        preday=120;
+    break;
+    case 6:
+        tian=30;
+        preday=151;
+    break;
+    case 7:
+        tian=31;
+        preday=181;
+    break;
+    case 8:
+        tian=31;
+        preday=212;
+    break;
+    case 9:
+        tian=30;
+        preday=243;
+    break;
+    case 10:
+        tian=31;
+        preday=273;
+    break;
+    case 11:
+        tian=30;
+        preday=304;
+    break;
+    default:
+        tian=31;
+        preday=334;
+    }
+    if(duo(year)&&month>2)
+    	preday++;
+
+    if(duo(year)&&month==2)
+    	tian=29;
+
+    day=((year-1)*365+(year-1)/4-(year-1)/100+(year-1)/400+preday+1)%7;    
+    print(day,tian);
 }
