@@ -157,6 +157,7 @@ PUBLIC int tinix_main()
 	proc_table[4].priority =  7;
 	proc_table[5].priority =  10;
 	proc_table[6].priority =  10;//calendar
+	proc_table[7].priority =  20;//guess
 
 
 	firstLen=firstHead=secondLen=thirdLen=0;
@@ -171,6 +172,7 @@ PUBLIC int tinix_main()
 	proc_table[4].nr_tty = 1;
 	proc_table[5].nr_tty = 1;
 	proc_table[6].nr_tty = 2; //calendar Alt+F3
+	proc_table[7].nr_tty = 3;//guss game Alt+F4
 
 	k_reenter	= 0;
 	ticks		= 0;
@@ -349,7 +351,7 @@ void TestB()
 {
 	int i = 0;
 	while(1){
-		printf("This is B\n");
+		printf("B");
 		milli_delay(1000);
 	}
 }
@@ -363,7 +365,7 @@ void TestC()
 {
 	int i = 0;
 	while(1){
-		printf("This is C\n");
+		printf("C");
 		milli_delay(1000);
 	}
 }
@@ -373,7 +375,7 @@ void TestD()
 	int i=0;
 	while (1)
 	{
-		printf("This is D\n");
+		printf("D");
 		milli_delay(1000);
 	}
 }
@@ -383,7 +385,7 @@ void TestE()
 	int i=0;
 	while (1)
 	{
-		printf("This is E\n");
+		printf("E");
 		milli_delay(1000);
 	}
 }
@@ -391,20 +393,95 @@ void TestE()
 				Game2048
 *=======================================================================*/
 
-TTY *goBangGameTty=tty_table+2;
+//TTY *goBangGameTty=tty_table+2;
 
 
-void displayGameState()
+// void displayGameState()
+// {
+
+// 	sys_clear(goBangGameTty);
+// 	disp_str("start");
+
+// }
+
+
+
+/*======================================================================*
+				guess game
+*=======================================================================*/
+TTY *gussTTy = tty_table+1;
+void guess()
 {
+	char gamer;  // 玩家出拳
+    int computer;  // 电脑出拳
+    int result;  // 比赛结果
 
-	sys_clear(goBangGameTty);
-	disp_str("start");
+    // 为了避免玩一次游戏就退出程序，可以将代码放在循环中
+    while (1){
+        printf("This is a guess game, please input your choice: ");
+        printf("A:scissors\nB:stone\nC:cloth\nD:end game\n");
+        do 
+        {
+        	gamer = getUserInput();
+        }
+        while(gamer == -1);
+        if (gamer == 0)
+        {
+        	return;
+        }
+       
+        computer=getRandom(5);  // 产生随机数并取余，得到电脑出拳
+        result=(int)gamer+computer;  // gamer 为 char 类型，数学运算时要强制转换类型
+        printf("Computer....:");
+        switch (computer)
+        {
+            case 0:printf("scissors\n");break; //4    1
+            case 1:printf("stone\n");break; //7  2
+            case 2:printf("cloth\n");break;   //10 3
+        }
+        printf("Your....:");
+        switch (gamer)
+        {
+            case 4:printf("scissors\n");break;
+            case 7:printf("stone\n");break;
+            case 10:printf("cloth\n");break;
+        }
+        if (result==6||result==7||result==11) printf("You win!");
+        else if (result==5||result==9||result==10) printf("Computer win!");
+        else printf("deuce");
 
+        milli_delay(1000);
+        clearScreen();  // 暂停并清屏
+
+    }
+    //while(1);
 }
 
-void goBangGameStart()
-{}
+int getRandom(int i) {
+	return i%3;
+}
 
+int getUserInput() {
+	openStartScanf(gussTTy);
+	while(gussTTy->startScanf) ;
+	if (strcmp(gussTTy->str, "a") == 0)
+	{
+		return 4;
+	}
+	else if (strcmp(gussTTy->str, "b") == 0) {
+		return 7;
+	}
+	else if (strcmp(gussTTy->str, "c") == 0) {
+		return 10;
+	}
+	else if (strcmp(gussTTy->str, "d") == 0) {
+		return 0;
+	}
+	else {
+		printf("您的输入有误\n");
+		return -1;
+	}
+}
 
 /*======================================================================*
 				Calender of July, 2015
