@@ -369,27 +369,12 @@ void TestE()
 		milli_delay(1000);
 	}
 }
-/*======================================================================*
-				Game
-*=======================================================================*/
-
-//TTY *goBangGameTty=tty_table+2;
-
-
-// void displayGameState()
-// {
-
-// 	sys_clear(goBangGameTty);
-// 	disp_str("start");
-
-// }
-
 
 
 /*======================================================================*
 				guess game
 *=======================================================================*/
-TTY *gussTTy = tty_table+1;
+TTY *gussTTy = tty_table+3;
 void guess()
 {
 	char gamer;  // 玩家出拳
@@ -399,7 +384,7 @@ void guess()
     // 为了避免玩一次游戏就退出程序，可以将代码放在循环中
     while (1){
         printf("This is a guess game, please input your choice: ");
-        printf("A:scissors\nB:stone\nC:cloth\nD:end game\n");
+        printf("\nA:scissors\nB:stone\nC:cloth\nD:end game\n");
         do 
         {
         	gamer = getUserInput();
@@ -410,8 +395,8 @@ void guess()
         	return;
         }
        
-        computer=getRandom(5);  // 产生随机数并取余，得到电脑出拳
-        result=(int)gamer+computer;  // gamer 为 char 类型，数学运算时要强制转换类型
+        computer=getRandom();  // 产生随机数并取余，得到电脑出拳
+        result=gamer+computer;  
         printf("Computer....:");
         switch (computer)
         {
@@ -426,19 +411,17 @@ void guess()
             case 7:printf("stone\n");break;
             case 10:printf("cloth\n");break;
         }
-        if (result==6||result==7||result==11) printf("You win!");
-        else if (result==5||result==9||result==10) printf("Computer win!");
-        else printf("deuce");
+        if (result==6||result==7||result==11) printf("You win!\n");
+        else if (result==5||result==9||result==10) printf("Computer win!\n");
+        else printf("deuce\n");
 
         milli_delay(1000);
         clearScreen();  // 暂停并清屏
-
     }
-    //while(1);
 }
 
-int getRandom(int i) {
-	return i%3;
+int getRandom() {
+	return ticks%3;
 }
 
 int getUserInput() {
