@@ -1,472 +1,947 @@
-/***
-*stdio.h - definitions/declarations for standard I/O routines
-*
-*       Copyright (c) 1985-1997, Microsoft Corporation. All rights reserved.
-*
-*Purpose:
-*       This file defines the structures, values, macros, and functions
-*       used by the level 2 I/O ("standard I/O") routines.
-*       [ANSI/System V]
-*
-*       [Public]
-*
-****/
+/* Define ISO C stdio on top of C++ iostreams.
+   Copyright (C) 1991-2014 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
 
-#if     _MSC_VER > 1000
-#pragma once
-#endif
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
 
-#ifndef _INC_STDIO
-#define _INC_STDIO
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
 
-#if     !defined(_WIN32) && !defined(_MAC)
-#error ERROR: Only Mac or Win32 targets supported!
-#endif
-
-
-#ifdef  _MSC_VER
-/*
- * Currently, all MS C compilers for Win32 platforms default to 8 byte
- * alignment.
- */
-#pragma pack(push,8)
-#endif  /* _MSC_VER */
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
-
-
-/* Define _CRTIMP */
-
-#ifndef _CRTIMP
-#ifdef  _DLL
-#define _CRTIMP __declspec(dllimport)
-#else   /* ndef _DLL */
-#define _CRTIMP
-#endif  /* _DLL */
-#endif  /* _CRTIMP */
-
-
-/* Define __cdecl for non-Microsoft compilers */
-
-#if     ( !defined(_MSC_VER) && !defined(__cdecl) )
-#define __cdecl
-#endif
-
-/* Define _CRTAPI1 (for compatibility with the NT SDK) */
-
-#ifndef _CRTAPI1
-#if	_MSC_VER >= 800 && _M_IX86 >= 300
-#define _CRTAPI1 __cdecl
-#else
-#define _CRTAPI1
-#endif
-#endif
-
-
-#ifndef _SIZE_T_DEFINED
-typedef unsigned int size_t;
-#define _SIZE_T_DEFINED
-#endif
-
-
-#ifndef _MAC
-#ifndef _WCHAR_T_DEFINED
-typedef unsigned short wchar_t;
-#define _WCHAR_T_DEFINED
-#endif
-
-
-#ifndef _WCTYPE_T_DEFINED
-typedef wchar_t wint_t;
-typedef wchar_t wctype_t;
-#define _WCTYPE_T_DEFINED
-#endif
-#endif /* ndef _MAC */
-
-
-#ifndef _VA_LIST_DEFINED
-#ifdef  _M_ALPHA
-typedef struct {
-        char *a0;       /* pointer to first homed integer argument */
-        int offset;     /* byte offset of next parameter */
-} va_list;
-#else
-typedef char *  va_list;
-#endif
-#define _VA_LIST_DEFINED
-#endif
-
-
-/* Buffered I/O macros */
-
-#if     defined(_M_MPPC)
-#define BUFSIZ  4096
-#else  /* defined (_M_MPPC) */
-#define BUFSIZ  512
-#endif /* defined (_M_MPPC) */
-
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, see
+   <http://www.gnu.org/licenses/>.  */
 
 /*
- * Default number of supported streams. _NFILE is confusing and obsolete, but
- * supported anyway for backwards compatibility.
+ *	ISO C99 Standard: 7.19 Input/output	<stdio.h>
  */
-#define _NFILE      _NSTREAM_
 
-#ifdef  _WIN32
+#ifndef _STDIO_H
 
-#define _NSTREAM_   512
+#if !defined __need_FILE && !defined __need___FILE
+# define _STDIO_H	1
+# include <features.h>
 
-/*
- * Number of entries in _iob[] (declared below). Note that _NSTREAM_ must be
- * greater than or equal to _IOB_ENTRIES.
- */
-#define _IOB_ENTRIES 20
+__BEGIN_DECLS
 
-#else   /* ndef _WIN32 */
+# define __need_size_t
+# define __need_NULL
+# include <stddef.h>
 
-#ifdef  _DLL
-#define _NSTREAM_   128
+# include <bits/types.h>
+# define __need_FILE
+# define __need___FILE
+#endif /* Don't need FILE.  */
+
+
+#if !defined __FILE_defined && defined __need_FILE
+
+/* Define outside of namespace so the C++ is happy.  */
+struct _IO_FILE;
+
+__BEGIN_NAMESPACE_STD
+/* The opaque type of streams.  This is the definition used elsewhere.  */
+typedef struct _IO_FILE FILE;
+__END_NAMESPACE_STD
+#if defined __USE_LARGEFILE64 || defined __USE_SVID || defined __USE_POSIX \
+    || defined __USE_BSD || defined __USE_ISOC99 || defined __USE_XOPEN \
+    || defined __USE_POSIX2
+__USING_NAMESPACE_STD(FILE)
+#endif
+
+# define __FILE_defined	1
+#endif /* FILE not defined.  */
+#undef	__need_FILE
+
+
+#if !defined ____FILE_defined && defined __need___FILE
+
+/* The opaque type of streams.  This is the definition used elsewhere.  */
+typedef struct _IO_FILE __FILE;
+
+# define ____FILE_defined	1
+#endif /* __FILE not defined.  */
+#undef	__need___FILE
+
+
+#ifdef	_STDIO_H
+#define _STDIO_USES_IOSTREAM
+
+#include <libio.h>
+
+#if defined __USE_XOPEN || defined __USE_XOPEN2K8
+# ifdef __GNUC__
+#  ifndef _VA_LIST_DEFINED
+typedef _G_va_list va_list;
+#   define _VA_LIST_DEFINED
+#  endif
+# else
+#  include <stdarg.h>
+# endif
+#endif
+
+#ifdef __USE_XOPEN2K8
+# ifndef __off_t_defined
+# ifndef __USE_FILE_OFFSET64
+typedef __off_t off_t;
+# else
+typedef __off64_t off_t;
+# endif
+# define __off_t_defined
+# endif
+# if defined __USE_LARGEFILE64 && !defined __off64_t_defined
+typedef __off64_t off64_t;
+# define __off64_t_defined
+# endif
+
+# ifndef __ssize_t_defined
+typedef __ssize_t ssize_t;
+# define __ssize_t_defined
+# endif
+#endif
+
+/* The type of the second argument to `fgetpos' and `fsetpos'.  */
+__BEGIN_NAMESPACE_STD
+#ifndef __USE_FILE_OFFSET64
+typedef _G_fpos_t fpos_t;
 #else
-#ifdef  _MT
-#define _NSTREAM_   40
+typedef _G_fpos64_t fpos_t;
+#endif
+__END_NAMESPACE_STD
+#ifdef __USE_LARGEFILE64
+typedef _G_fpos64_t fpos64_t;
+#endif
+
+/* The possibilities for the third argument to `setvbuf'.  */
+#define _IOFBF 0		/* Fully buffered.  */
+#define _IOLBF 1		/* Line buffered.  */
+#define _IONBF 2		/* No buffering.  */
+
+
+/* Default buffer size.  */
+#ifndef BUFSIZ
+# define BUFSIZ _IO_BUFSIZ
+#endif
+
+
+/* End of file character.
+   Some things throughout the library rely on this being -1.  */
+#ifndef EOF
+# define EOF (-1)
+#endif
+
+
+/* The possibilities for the third argument to `fseek'.
+   These values should not be changed.  */
+#define SEEK_SET	0	/* Seek from beginning of file.  */
+#define SEEK_CUR	1	/* Seek from current position.  */
+#define SEEK_END	2	/* Seek from end of file.  */
+#ifdef __USE_GNU
+# define SEEK_DATA	3	/* Seek to next data.  */
+# define SEEK_HOLE	4	/* Seek to next hole.  */
+#endif
+
+
+#if defined __USE_SVID || defined __USE_XOPEN
+/* Default path prefix for `tempnam' and `tmpnam'.  */
+# define P_tmpdir	"/tmp"
+#endif
+
+
+/* Get the values:
+   L_tmpnam	How long an array of chars must be to be passed to `tmpnam'.
+   TMP_MAX	The minimum number of unique filenames generated by tmpnam
+		(and tempnam when it uses tmpnam's name space),
+		or tempnam (the two are separate).
+   L_ctermid	How long an array to pass to `ctermid'.
+   L_cuserid	How long an array to pass to `cuserid'.
+   FOPEN_MAX	Minimum number of files that can be open at once.
+   FILENAME_MAX	Maximum length of a filename.  */
+#include <bits/stdio_lim.h>
+
+
+/* Standard streams.  */
+extern struct _IO_FILE *stdin;		/* Standard input stream.  */
+extern struct _IO_FILE *stdout;		/* Standard output stream.  */
+extern struct _IO_FILE *stderr;		/* Standard error output stream.  */
+/* C89/C99 say they're macros.  Make them happy.  */
+#define stdin stdin
+#define stdout stdout
+#define stderr stderr
+
+__BEGIN_NAMESPACE_STD
+/* Remove file FILENAME.  */
+extern int remove (const char *__filename) __THROW;
+/* Rename file OLD to NEW.  */
+extern int rename (const char *__old, const char *__new) __THROW;
+__END_NAMESPACE_STD
+
+#ifdef __USE_ATFILE
+/* Rename file OLD relative to OLDFD to NEW relative to NEWFD.  */
+extern int renameat (int __oldfd, const char *__old, int __newfd,
+		     const char *__new) __THROW;
+#endif
+
+__BEGIN_NAMESPACE_STD
+/* Create a temporary file and open it read/write.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+#ifndef __USE_FILE_OFFSET64
+extern FILE *tmpfile (void) __wur;
 #else
-#define _NSTREAM_   20
+# ifdef __REDIRECT
+extern FILE *__REDIRECT (tmpfile, (void), tmpfile64) __wur;
+# else
+#  define tmpfile tmpfile64
+# endif
 #endif
-#endif  /* _DLL */
 
-#endif  /* ndef _MAC */
+#ifdef __USE_LARGEFILE64
+extern FILE *tmpfile64 (void) __wur;
+#endif
 
-#define EOF     (-1)
+/* Generate a temporary filename.  */
+extern char *tmpnam (char *__s) __THROW __wur;
+__END_NAMESPACE_STD
 
-
-#ifndef _FILE_DEFINED
-struct _iobuf {
-        char *_ptr;
-        int   _cnt;
-        char *_base;
-        int   _flag;
-        int   _file;
-        int   _charbuf;
-        int   _bufsiz;
-        char *_tmpfname;
-        };
-typedef struct _iobuf FILE;
-#define _FILE_DEFINED
+#ifdef __USE_MISC
+/* This is the reentrant variant of `tmpnam'.  The only difference is
+   that it does not allow S to be NULL.  */
+extern char *tmpnam_r (char *__s) __THROW __wur;
 #endif
 
 
-#ifndef _MAC
+#if defined __USE_SVID || defined __USE_XOPEN
+/* Generate a unique temporary filename using up to five characters of PFX
+   if it is not NULL.  The directory to put this file in is searched for
+   as follows: First the environment variable "TMPDIR" is checked.
+   If it contains the name of a writable directory, that directory is used.
+   If not and if DIR is not NULL, that value is checked.  If that fails,
+   P_tmpdir is tried and finally "/tmp".  The storage for the filename
+   is allocated by `malloc'.  */
+extern char *tempnam (const char *__dir, const char *__pfx)
+     __THROW __attribute_malloc__ __wur;
+#endif
 
-/* Directory where temporary files may be created. */
 
-#ifdef  _POSIX_
-#define _P_tmpdir   "/"
-#define _wP_tmpdir  L"/"
+__BEGIN_NAMESPACE_STD
+/* Close STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fclose (FILE *__stream);
+/* Flush STREAM, or all streams if STREAM is NULL.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fflush (FILE *__stream);
+__END_NAMESPACE_STD
+
+#ifdef __USE_MISC
+/* Faster versions when locking is not required.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern int fflush_unlocked (FILE *__stream);
+#endif
+
+#ifdef __USE_GNU
+/* Close all streams.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern int fcloseall (void);
+#endif
+
+
+__BEGIN_NAMESPACE_STD
+#ifndef __USE_FILE_OFFSET64
+/* Open a file and create a new stream for it.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern FILE *fopen (const char *__restrict __filename,
+		    const char *__restrict __modes) __wur;
+/* Open a file, replacing an existing stream with it.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern FILE *freopen (const char *__restrict __filename,
+		      const char *__restrict __modes,
+		      FILE *__restrict __stream) __wur;
 #else
-#define _P_tmpdir   "\\"
-#define _wP_tmpdir  L"\\"
+# ifdef __REDIRECT
+extern FILE *__REDIRECT (fopen, (const char *__restrict __filename,
+				 const char *__restrict __modes), fopen64)
+  __wur;
+extern FILE *__REDIRECT (freopen, (const char *__restrict __filename,
+				   const char *__restrict __modes,
+				   FILE *__restrict __stream), freopen64)
+  __wur;
+# else
+#  define fopen fopen64
+#  define freopen freopen64
+# endif
+#endif
+__END_NAMESPACE_STD
+#ifdef __USE_LARGEFILE64
+extern FILE *fopen64 (const char *__restrict __filename,
+		      const char *__restrict __modes) __wur;
+extern FILE *freopen64 (const char *__restrict __filename,
+			const char *__restrict __modes,
+			FILE *__restrict __stream) __wur;
 #endif
 
-/* L_tmpnam = size of P_tmpdir
- *            + 1 (in case P_tmpdir does not end in "/")
- *            + 12 (for the filename string)
- *            + 1 (for the null terminator)
- */
-#define L_tmpnam sizeof(_P_tmpdir)+12
+#ifdef	__USE_POSIX
+/* Create a new stream that refers to an existing system file descriptor.  */
+extern FILE *fdopen (int __fd, const char *__modes) __THROW __wur;
+#endif
 
-#else   /* def _MAC */
+#ifdef	__USE_GNU
+/* Create a new stream that refers to the given magic cookie,
+   and uses the given functions for input and output.  */
+extern FILE *fopencookie (void *__restrict __magic_cookie,
+			  const char *__restrict __modes,
+			  _IO_cookie_io_functions_t __io_funcs) __THROW __wur;
+#endif
 
-#define L_tmpnam 255
+#ifdef __USE_XOPEN2K8
+/* Create a new stream that refers to a memory buffer.  */
+extern FILE *fmemopen (void *__s, size_t __len, const char *__modes)
+  __THROW __wur;
 
-#endif  /* _MAC */
-
-
-#ifdef  _POSIX_
-#define L_ctermid   9
-#define L_cuserid   32
+/* Open a stream that writes into a malloc'd buffer that is expanded as
+   necessary.  *BUFLOC and *SIZELOC are updated with the buffer's location
+   and the number of characters written on fflush or fclose.  */
+extern FILE *open_memstream (char **__bufloc, size_t *__sizeloc) __THROW __wur;
 #endif
 
 
-/* Seek method constants */
+__BEGIN_NAMESPACE_STD
+/* If BUF is NULL, make STREAM unbuffered.
+   Else make it use buffer BUF, of size BUFSIZ.  */
+extern void setbuf (FILE *__restrict __stream, char *__restrict __buf) __THROW;
+/* Make STREAM use buffering mode MODE.
+   If BUF is not NULL, use N bytes of it for buffering;
+   else allocate an internal buffer N bytes long.  */
+extern int setvbuf (FILE *__restrict __stream, char *__restrict __buf,
+		    int __modes, size_t __n) __THROW;
+__END_NAMESPACE_STD
 
-#define SEEK_CUR    1
-#define SEEK_END    2
-#define SEEK_SET    0
+#ifdef	__USE_BSD
+/* If BUF is NULL, make STREAM unbuffered.
+   Else make it use SIZE bytes of BUF for buffering.  */
+extern void setbuffer (FILE *__restrict __stream, char *__restrict __buf,
+		       size_t __size) __THROW;
+
+/* Make STREAM line-buffered.  */
+extern void setlinebuf (FILE *__stream) __THROW;
+#endif
 
 
-#define FILENAME_MAX    260
-#define FOPEN_MAX       20
-#define _SYS_OPEN       20
-#define TMP_MAX         32767
+__BEGIN_NAMESPACE_STD
+/* Write formatted output to STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fprintf (FILE *__restrict __stream,
+		    const char *__restrict __format, ...);
+/* Write formatted output to stdout.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int printf (const char *__restrict __format, ...);
+/* Write formatted output to S.  */
+extern int sprintf (char *__restrict __s,
+		    const char *__restrict __format, ...) __THROWNL;
+
+/* Write formatted output to S from argument list ARG.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int vfprintf (FILE *__restrict __s, const char *__restrict __format,
+		     _G_va_list __arg);
+/* Write formatted output to stdout from argument list ARG.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int vprintf (const char *__restrict __format, _G_va_list __arg);
+/* Write formatted output to S from argument list ARG.  */
+extern int vsprintf (char *__restrict __s, const char *__restrict __format,
+		     _G_va_list __arg) __THROWNL;
+__END_NAMESPACE_STD
+
+#if defined __USE_BSD || defined __USE_ISOC99 || defined __USE_UNIX98
+__BEGIN_NAMESPACE_C99
+/* Maximum chars of output to write in MAXLEN.  */
+extern int snprintf (char *__restrict __s, size_t __maxlen,
+		     const char *__restrict __format, ...)
+     __THROWNL __attribute__ ((__format__ (__printf__, 3, 4)));
+
+extern int vsnprintf (char *__restrict __s, size_t __maxlen,
+		      const char *__restrict __format, _G_va_list __arg)
+     __THROWNL __attribute__ ((__format__ (__printf__, 3, 0)));
+__END_NAMESPACE_C99
+#endif
+
+#ifdef __USE_GNU
+/* Write formatted output to a string dynamically allocated with `malloc'.
+   Store the address of the string in *PTR.  */
+extern int vasprintf (char **__restrict __ptr, const char *__restrict __f,
+		      _G_va_list __arg)
+     __THROWNL __attribute__ ((__format__ (__printf__, 2, 0))) __wur;
+extern int __asprintf (char **__restrict __ptr,
+		       const char *__restrict __fmt, ...)
+     __THROWNL __attribute__ ((__format__ (__printf__, 2, 3))) __wur;
+extern int asprintf (char **__restrict __ptr,
+		     const char *__restrict __fmt, ...)
+     __THROWNL __attribute__ ((__format__ (__printf__, 2, 3))) __wur;
+#endif
+
+#ifdef __USE_XOPEN2K8
+/* Write formatted output to a file descriptor.  */
+extern int vdprintf (int __fd, const char *__restrict __fmt,
+		     _G_va_list __arg)
+     __attribute__ ((__format__ (__printf__, 2, 0)));
+extern int dprintf (int __fd, const char *__restrict __fmt, ...)
+     __attribute__ ((__format__ (__printf__, 2, 3)));
+#endif
 
 
-/* Define NULL pointer value */
+__BEGIN_NAMESPACE_STD
+/* Read formatted input from STREAM.
 
-#ifndef NULL
-#ifdef  __cplusplus
-#define NULL    0
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fscanf (FILE *__restrict __stream,
+		   const char *__restrict __format, ...) __wur;
+/* Read formatted input from stdin.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int scanf (const char *__restrict __format, ...) __wur;
+/* Read formatted input from S.  */
+extern int sscanf (const char *__restrict __s,
+		   const char *__restrict __format, ...) __THROW;
+
+#if defined __USE_ISOC99 && !defined __USE_GNU \
+    && (!defined __LDBL_COMPAT || !defined __REDIRECT) \
+    && (defined __STRICT_ANSI__ || defined __USE_XOPEN2K)
+# ifdef __REDIRECT
+/* For strict ISO C99 or POSIX compliance disallow %as, %aS and %a[
+   GNU extension which conflicts with valid %a followed by letter
+   s, S or [.  */
+extern int __REDIRECT (fscanf, (FILE *__restrict __stream,
+				const char *__restrict __format, ...),
+		       __isoc99_fscanf) __wur;
+extern int __REDIRECT (scanf, (const char *__restrict __format, ...),
+		       __isoc99_scanf) __wur;
+extern int __REDIRECT_NTH (sscanf, (const char *__restrict __s,
+				    const char *__restrict __format, ...),
+			   __isoc99_sscanf);
+# else
+extern int __isoc99_fscanf (FILE *__restrict __stream,
+			    const char *__restrict __format, ...) __wur;
+extern int __isoc99_scanf (const char *__restrict __format, ...) __wur;
+extern int __isoc99_sscanf (const char *__restrict __s,
+			    const char *__restrict __format, ...) __THROW;
+#  define fscanf __isoc99_fscanf
+#  define scanf __isoc99_scanf
+#  define sscanf __isoc99_sscanf
+# endif
+#endif
+
+__END_NAMESPACE_STD
+
+#ifdef	__USE_ISOC99
+__BEGIN_NAMESPACE_C99
+/* Read formatted input from S into argument list ARG.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int vfscanf (FILE *__restrict __s, const char *__restrict __format,
+		    _G_va_list __arg)
+     __attribute__ ((__format__ (__scanf__, 2, 0))) __wur;
+
+/* Read formatted input from stdin into argument list ARG.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int vscanf (const char *__restrict __format, _G_va_list __arg)
+     __attribute__ ((__format__ (__scanf__, 1, 0))) __wur;
+
+/* Read formatted input from S into argument list ARG.  */
+extern int vsscanf (const char *__restrict __s,
+		    const char *__restrict __format, _G_va_list __arg)
+     __THROW __attribute__ ((__format__ (__scanf__, 2, 0)));
+
+# if !defined __USE_GNU \
+     && (!defined __LDBL_COMPAT || !defined __REDIRECT) \
+     && (defined __STRICT_ANSI__ || defined __USE_XOPEN2K)
+#  ifdef __REDIRECT
+/* For strict ISO C99 or POSIX compliance disallow %as, %aS and %a[
+   GNU extension which conflicts with valid %a followed by letter
+   s, S or [.  */
+extern int __REDIRECT (vfscanf,
+		       (FILE *__restrict __s,
+			const char *__restrict __format, _G_va_list __arg),
+		       __isoc99_vfscanf)
+     __attribute__ ((__format__ (__scanf__, 2, 0))) __wur;
+extern int __REDIRECT (vscanf, (const char *__restrict __format,
+				_G_va_list __arg), __isoc99_vscanf)
+     __attribute__ ((__format__ (__scanf__, 1, 0))) __wur;
+extern int __REDIRECT_NTH (vsscanf,
+			   (const char *__restrict __s,
+			    const char *__restrict __format,
+			    _G_va_list __arg), __isoc99_vsscanf)
+     __attribute__ ((__format__ (__scanf__, 2, 0)));
+#  else
+extern int __isoc99_vfscanf (FILE *__restrict __s,
+			     const char *__restrict __format,
+			     _G_va_list __arg) __wur;
+extern int __isoc99_vscanf (const char *__restrict __format,
+			    _G_va_list __arg) __wur;
+extern int __isoc99_vsscanf (const char *__restrict __s,
+			     const char *__restrict __format,
+			     _G_va_list __arg) __THROW;
+#   define vfscanf __isoc99_vfscanf
+#   define vscanf __isoc99_vscanf
+#   define vsscanf __isoc99_vsscanf
+#  endif
+# endif
+
+__END_NAMESPACE_C99
+#endif /* Use ISO C9x.  */
+
+
+__BEGIN_NAMESPACE_STD
+/* Read a character from STREAM.
+
+   These functions are possible cancellation points and therefore not
+   marked with __THROW.  */
+extern int fgetc (FILE *__stream);
+extern int getc (FILE *__stream);
+
+/* Read a character from stdin.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int getchar (void);
+__END_NAMESPACE_STD
+
+/* The C standard explicitly says this is a macro, so we always do the
+   optimization for it.  */
+#define getc(_fp) _IO_getc (_fp)
+
+#if defined __USE_POSIX || defined __USE_MISC
+/* These are defined in POSIX.1:1996.
+
+   These functions are possible cancellation points and therefore not
+   marked with __THROW.  */
+extern int getc_unlocked (FILE *__stream);
+extern int getchar_unlocked (void);
+#endif /* Use POSIX or MISC.  */
+
+#ifdef __USE_MISC
+/* Faster version when locking is not necessary.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern int fgetc_unlocked (FILE *__stream);
+#endif /* Use MISC.  */
+
+
+__BEGIN_NAMESPACE_STD
+/* Write a character to STREAM.
+
+   These functions are possible cancellation points and therefore not
+   marked with __THROW.
+
+   These functions is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fputc (int __c, FILE *__stream);
+extern int putc (int __c, FILE *__stream);
+
+/* Write a character to stdout.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int putchar (int __c);
+__END_NAMESPACE_STD
+
+/* The C standard explicitly says this can be a macro,
+   so we always do the optimization for it.  */
+#define putc(_ch, _fp) _IO_putc (_ch, _fp)
+
+#ifdef __USE_MISC
+/* Faster version when locking is not necessary.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern int fputc_unlocked (int __c, FILE *__stream);
+#endif /* Use MISC.  */
+
+#if defined __USE_POSIX || defined __USE_MISC
+/* These are defined in POSIX.1:1996.
+
+   These functions are possible cancellation points and therefore not
+   marked with __THROW.  */
+extern int putc_unlocked (int __c, FILE *__stream);
+extern int putchar_unlocked (int __c);
+#endif /* Use POSIX or MISC.  */
+
+
+#if defined __USE_SVID || defined __USE_MISC \
+    || (defined __USE_XOPEN && !defined __USE_XOPEN2K)
+/* Get a word (int) from STREAM.  */
+extern int getw (FILE *__stream);
+
+/* Write a word (int) to STREAM.  */
+extern int putw (int __w, FILE *__stream);
+#endif
+
+
+__BEGIN_NAMESPACE_STD
+/* Get a newline-terminated string of finite length from STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern char *fgets (char *__restrict __s, int __n, FILE *__restrict __stream)
+     __wur;
+
+#if !defined __USE_ISOC11 \
+    || (defined __cplusplus && __cplusplus <= 201103L)
+/* Get a newline-terminated string from stdin, removing the newline.
+   DO NOT USE THIS FUNCTION!!  There is no limit on how much it will read.
+
+   The function has been officially removed in ISO C11.  This opportunity
+   is used to also remove it from the GNU feature list.  It is now only
+   available when explicitly using an old ISO C, Unix, or POSIX standard.
+   GCC defines _GNU_SOURCE when building C++ code and the function is still
+   in C++11, so it is also available for C++.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern char *gets (char *__s) __wur __attribute_deprecated__;
+#endif
+__END_NAMESPACE_STD
+
+#ifdef __USE_GNU
+/* This function does the same as `fgets' but does not lock the stream.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern char *fgets_unlocked (char *__restrict __s, int __n,
+			     FILE *__restrict __stream) __wur;
+#endif
+
+
+#ifdef	__USE_XOPEN2K8
+/* Read up to (and including) a DELIMITER from STREAM into *LINEPTR
+   (and null-terminate it). *LINEPTR is a pointer returned from malloc (or
+   NULL), pointing to *N characters of space.  It is realloc'd as
+   necessary.  Returns the number of characters read (not including the
+   null terminator), or -1 on error or EOF.
+
+   These functions are not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation they are cancellation points and
+   therefore not marked with __THROW.  */
+extern _IO_ssize_t __getdelim (char **__restrict __lineptr,
+			       size_t *__restrict __n, int __delimiter,
+			       FILE *__restrict __stream) __wur;
+extern _IO_ssize_t getdelim (char **__restrict __lineptr,
+			     size_t *__restrict __n, int __delimiter,
+			     FILE *__restrict __stream) __wur;
+
+/* Like `getdelim', but reads up to a newline.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern _IO_ssize_t getline (char **__restrict __lineptr,
+			    size_t *__restrict __n,
+			    FILE *__restrict __stream) __wur;
+#endif
+
+
+__BEGIN_NAMESPACE_STD
+/* Write a string to STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fputs (const char *__restrict __s, FILE *__restrict __stream);
+
+/* Write a string, followed by a newline, to stdout.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int puts (const char *__s);
+
+
+/* Push a character back onto the input buffer of STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int ungetc (int __c, FILE *__stream);
+
+
+/* Read chunks of generic data from STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern size_t fread (void *__restrict __ptr, size_t __size,
+		     size_t __n, FILE *__restrict __stream) __wur;
+/* Write chunks of generic data to STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern size_t fwrite (const void *__restrict __ptr, size_t __size,
+		      size_t __n, FILE *__restrict __s);
+__END_NAMESPACE_STD
+
+#ifdef __USE_GNU
+/* This function does the same as `fputs' but does not lock the stream.
+
+   This function is not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation it is a cancellation point and
+   therefore not marked with __THROW.  */
+extern int fputs_unlocked (const char *__restrict __s,
+			   FILE *__restrict __stream);
+#endif
+
+#ifdef __USE_MISC
+/* Faster versions when locking is not necessary.
+
+   These functions are not part of POSIX and therefore no official
+   cancellation point.  But due to similarity with an POSIX interface
+   or due to the implementation they are cancellation points and
+   therefore not marked with __THROW.  */
+extern size_t fread_unlocked (void *__restrict __ptr, size_t __size,
+			      size_t __n, FILE *__restrict __stream) __wur;
+extern size_t fwrite_unlocked (const void *__restrict __ptr, size_t __size,
+			       size_t __n, FILE *__restrict __stream);
+#endif
+
+
+__BEGIN_NAMESPACE_STD
+/* Seek to a certain position on STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fseek (FILE *__stream, long int __off, int __whence);
+/* Return the current position of STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern long int ftell (FILE *__stream) __wur;
+/* Rewind to the beginning of STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern void rewind (FILE *__stream);
+__END_NAMESPACE_STD
+
+/* The Single Unix Specification, Version 2, specifies an alternative,
+   more adequate interface for the two functions above which deal with
+   file offset.  `long int' is not the right type.  These definitions
+   are originally defined in the Large File Support API.  */
+
+#if defined __USE_LARGEFILE || defined __USE_XOPEN2K
+# ifndef __USE_FILE_OFFSET64
+/* Seek to a certain position on STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fseeko (FILE *__stream, __off_t __off, int __whence);
+/* Return the current position of STREAM.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern __off_t ftello (FILE *__stream) __wur;
+# else
+#  ifdef __REDIRECT
+extern int __REDIRECT (fseeko,
+		       (FILE *__stream, __off64_t __off, int __whence),
+		       fseeko64);
+extern __off64_t __REDIRECT (ftello, (FILE *__stream), ftello64);
+#  else
+#   define fseeko fseeko64
+#   define ftello ftello64
+#  endif
+# endif
+#endif
+
+__BEGIN_NAMESPACE_STD
+#ifndef __USE_FILE_OFFSET64
+/* Get STREAM's position.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fgetpos (FILE *__restrict __stream, fpos_t *__restrict __pos);
+/* Set STREAM's position.
+
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int fsetpos (FILE *__stream, const fpos_t *__pos);
 #else
-#define NULL    ((void *)0)
+# ifdef __REDIRECT
+extern int __REDIRECT (fgetpos, (FILE *__restrict __stream,
+				 fpos_t *__restrict __pos), fgetpos64);
+extern int __REDIRECT (fsetpos,
+		       (FILE *__stream, const fpos_t *__pos), fsetpos64);
+# else
+#  define fgetpos fgetpos64
+#  define fsetpos fsetpos64
+# endif
 #endif
-#endif
+__END_NAMESPACE_STD
 
-
-/* Declare _iob[] array */
-
-#ifndef _STDIO_DEFINED
-_CRTIMP extern FILE _iob[];
-#endif  /* _STDIO_DEFINED */
-
-
-/* Define file position type */
-
-#ifndef _FPOS_T_DEFINED
-#undef _FPOSOFF
-
-#if defined (_POSIX_)
-typedef long fpos_t;
-#else /* _POSIX_ */
-
-#if     !__STDC__ && _INTEGRAL_MAX_BITS >= 64
-typedef __int64 fpos_t;
-#define _FPOSOFF(fp) ((long)(fp))
-#else
-typedef struct fpos_t {
-        unsigned int lopart;
-        int          hipart;
-        } fpos_t;
-#define _FPOSOFF(fp) ((long)(fp).lopart)
-#endif
-#endif  /* _POSIX_ */
-
-#define _FPOS_T_DEFINED
+#ifdef __USE_LARGEFILE64
+extern int fseeko64 (FILE *__stream, __off64_t __off, int __whence);
+extern __off64_t ftello64 (FILE *__stream) __wur;
+extern int fgetpos64 (FILE *__restrict __stream, fpos64_t *__restrict __pos);
+extern int fsetpos64 (FILE *__stream, const fpos64_t *__pos);
 #endif
 
+__BEGIN_NAMESPACE_STD
+/* Clear the error and EOF indicators for STREAM.  */
+extern void clearerr (FILE *__stream) __THROW;
+/* Return the EOF indicator for STREAM.  */
+extern int feof (FILE *__stream) __THROW __wur;
+/* Return the error indicator for STREAM.  */
+extern int ferror (FILE *__stream) __THROW __wur;
+__END_NAMESPACE_STD
 
-#define stdin  (&_iob[0])
-#define stdout (&_iob[1])
-#define stderr (&_iob[2])
-
-
-#define _IOREAD         0x0001
-#define _IOWRT          0x0002
-
-#define _IOFBF          0x0000
-#define _IOLBF          0x0040
-#define _IONBF          0x0004
-
-#define _IOMYBUF        0x0008
-#define _IOEOF          0x0010
-#define _IOERR          0x0020
-#define _IOSTRG         0x0040
-#define _IORW           0x0080
-#ifdef _POSIX_
-#define _IOAPPEND       0x0200
+#ifdef __USE_MISC
+/* Faster versions when locking is not required.  */
+extern void clearerr_unlocked (FILE *__stream) __THROW;
+extern int feof_unlocked (FILE *__stream) __THROW __wur;
+extern int ferror_unlocked (FILE *__stream) __THROW __wur;
 #endif
 
 
-/* Function prototypes */
+__BEGIN_NAMESPACE_STD
+/* Print a message describing the meaning of the value of errno.
 
-#ifndef _STDIO_DEFINED
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern void perror (const char *__s);
+__END_NAMESPACE_STD
 
-_CRTIMP int __cdecl _filbuf(FILE *);
-_CRTIMP int __cdecl _flsbuf(int, FILE *);
-
-#ifdef  _POSIX_
-_CRTIMP FILE * __cdecl _fsopen(const char *, const char *);
-#else
-_CRTIMP FILE * __cdecl _fsopen(const char *, const char *, int);
-#endif
-
-_CRTIMP void __cdecl clearerr(FILE *);
-_CRTIMP int __cdecl fclose(FILE *);
-_CRTIMP int __cdecl _fcloseall(void);
-
-#ifdef  _POSIX_
-_CRTIMP FILE * __cdecl fdopen(int, const char *);
-#else
-_CRTIMP FILE * __cdecl _fdopen(int, const char *);
-#endif
-
-_CRTIMP int __cdecl feof(FILE *);
-_CRTIMP int __cdecl ferror(FILE *);
-_CRTIMP int __cdecl fflush(FILE *);
-_CRTIMP int __cdecl fgetc(FILE *);
-_CRTIMP int __cdecl _fgetchar(void);
-_CRTIMP int __cdecl fgetpos(FILE *, fpos_t *);
-_CRTIMP char * __cdecl fgets(char *, int, FILE *);
-
-#ifdef  _POSIX_
-_CRTIMP int __cdecl fileno(FILE *);
-#else
-_CRTIMP int __cdecl _fileno(FILE *);
-#endif
-
-_CRTIMP int __cdecl _flushall(void);
-_CRTIMP FILE * __cdecl fopen(const char *, const char *);
-_CRTIMP int __cdecl fprintf(FILE *, const char *, ...);
-_CRTIMP int __cdecl fputc(int, FILE *);
-_CRTIMP int __cdecl _fputchar(int);
-_CRTIMP int __cdecl fputs(const char *, FILE *);
-_CRTIMP size_t __cdecl fread(void *, size_t, size_t, FILE *);
-_CRTIMP FILE * __cdecl freopen(const char *, const char *, FILE *);
-_CRTIMP int __cdecl fscanf(FILE *, const char *, ...);
-_CRTIMP int __cdecl fsetpos(FILE *, const fpos_t *);
-_CRTIMP int __cdecl fseek(FILE *, long, int);
-_CRTIMP long __cdecl ftell(FILE *);
-_CRTIMP size_t __cdecl fwrite(const void *, size_t, size_t, FILE *);
-_CRTIMP int __cdecl getc(FILE *);
-_CRTIMP int __cdecl getchar(void);
-_CRTIMP int __cdecl _getmaxstdio(void);
-_CRTIMP char * __cdecl gets(char *);
-_CRTIMP int __cdecl _getw(FILE *);
-_CRTIMP void __cdecl perror(const char *);
-_CRTIMP int __cdecl _pclose(FILE *);
-_CRTIMP FILE * __cdecl _popen(const char *, const char *);
-_CRTIMP int __cdecl printf(const char *, ...);
-_CRTIMP int __cdecl putc(int, FILE *);
-_CRTIMP int __cdecl putchar(int);
-_CRTIMP int __cdecl puts(const char *);
-_CRTIMP int __cdecl _putw(int, FILE *);
-_CRTIMP int __cdecl remove(const char *);
-_CRTIMP int __cdecl rename(const char *, const char *);
-_CRTIMP void __cdecl rewind(FILE *);
-_CRTIMP int __cdecl _rmtmp(void);
-_CRTIMP int __cdecl scanf(const char *, ...);
-_CRTIMP void __cdecl setbuf(FILE *, char *);
-_CRTIMP int __cdecl _setmaxstdio(int);
-_CRTIMP int __cdecl setvbuf(FILE *, char *, int, size_t);
-_CRTIMP int __cdecl _snprintf(char *, size_t, const char *, ...);
-_CRTIMP int __cdecl sprintf(char *, const char *, ...);
-_CRTIMP int __cdecl sscanf(const char *, const char *, ...);
-_CRTIMP char * __cdecl _tempnam(const char *, const char *);
-_CRTIMP FILE * __cdecl tmpfile(void);
-_CRTIMP char * __cdecl tmpnam(char *);
-_CRTIMP int __cdecl ungetc(int, FILE *);
-_CRTIMP int __cdecl _unlink(const char *);
-_CRTIMP int __cdecl vfprintf(FILE *, const char *, va_list);
-_CRTIMP int __cdecl vprintf(const char *, va_list);
-_CRTIMP int __cdecl _vsnprintf(char *, size_t, const char *, va_list);
-_CRTIMP int __cdecl vsprintf(char *, const char *, va_list);
-
-#ifndef _MAC
-#ifndef _WSTDIO_DEFINED
-
-/* wide function prototypes, also declared in wchar.h  */
-
-#ifndef WEOF
-#define WEOF (wint_t)(0xFFFF)
-#endif
-
-#ifdef  _POSIX_
-_CRTIMP FILE * __cdecl _wfsopen(const wchar_t *, const wchar_t *);
-#else
-_CRTIMP FILE * __cdecl _wfsopen(const wchar_t *, const wchar_t *, int);
-#endif
-
-_CRTIMP wint_t __cdecl fgetwc(FILE *);
-_CRTIMP wint_t __cdecl _fgetwchar(void);
-_CRTIMP wint_t __cdecl fputwc(wint_t, FILE *);
-_CRTIMP wint_t __cdecl _fputwchar(wint_t);
-_CRTIMP wint_t __cdecl getwc(FILE *);
-_CRTIMP wint_t __cdecl getwchar(void);
-_CRTIMP wint_t __cdecl putwc(wint_t, FILE *);
-_CRTIMP wint_t __cdecl putwchar(wint_t);
-_CRTIMP wint_t __cdecl ungetwc(wint_t, FILE *);
-
-_CRTIMP wchar_t * __cdecl fgetws(wchar_t *, int, FILE *);
-_CRTIMP int __cdecl fputws(const wchar_t *, FILE *);
-_CRTIMP wchar_t * __cdecl _getws(wchar_t *);
-_CRTIMP int __cdecl _putws(const wchar_t *);
-
-_CRTIMP int __cdecl fwprintf(FILE *, const wchar_t *, ...);
-_CRTIMP int __cdecl wprintf(const wchar_t *, ...);
-_CRTIMP int __cdecl _snwprintf(wchar_t *, size_t, const wchar_t *, ...);
-_CRTIMP int __cdecl swprintf(wchar_t *, const wchar_t *, ...);
-_CRTIMP int __cdecl vfwprintf(FILE *, const wchar_t *, va_list);
-_CRTIMP int __cdecl vwprintf(const wchar_t *, va_list);
-_CRTIMP int __cdecl _vsnwprintf(wchar_t *, size_t, const wchar_t *, va_list);
-_CRTIMP int __cdecl vswprintf(wchar_t *, const wchar_t *, va_list);
-_CRTIMP int __cdecl fwscanf(FILE *, const wchar_t *, ...);
-_CRTIMP int __cdecl swscanf(const wchar_t *, const wchar_t *, ...);
-_CRTIMP int __cdecl wscanf(const wchar_t *, ...);
-
-#define getwchar()              fgetwc(stdin)
-#define putwchar(_c)            fputwc((_c),stdout)
-#define getwc(_stm)             fgetwc(_stm)
-#define putwc(_c,_stm)          fputwc(_c,_stm)
-
-_CRTIMP FILE * __cdecl _wfdopen(int, const wchar_t *);
-_CRTIMP FILE * __cdecl _wfopen(const wchar_t *, const wchar_t *);
-_CRTIMP FILE * __cdecl _wfreopen(const wchar_t *, const wchar_t *, FILE *);
-_CRTIMP void __cdecl _wperror(const wchar_t *);
-_CRTIMP FILE * __cdecl _wpopen(const wchar_t *, const wchar_t *);
-_CRTIMP int __cdecl _wremove(const wchar_t *);
-_CRTIMP wchar_t * __cdecl _wtempnam(const wchar_t *, const wchar_t *);
-_CRTIMP wchar_t * __cdecl _wtmpnam(wchar_t *);
+/* Provide the declarations for `sys_errlist' and `sys_nerr' if they
+   are available on this system.  Even if available, these variables
+   should not be used directly.  The `strerror' function provides
+   all the necessary functionality.  */
+#include <bits/sys_errlist.h>
 
 
-#define _WSTDIO_DEFINED
-#endif  /* _WSTDIO_DEFINED */
-#endif /* ndef _MAC */
+#ifdef	__USE_POSIX
+/* Return the system file descriptor for STREAM.  */
+extern int fileno (FILE *__stream) __THROW __wur;
+#endif /* Use POSIX.  */
 
-#define _STDIO_DEFINED
-#endif  /* _STDIO_DEFINED */
-
-
-/* Macro definitions */
-
-#define feof(_stream)     ((_stream)->_flag & _IOEOF)
-#define ferror(_stream)   ((_stream)->_flag & _IOERR)
-#define _fileno(_stream)  ((_stream)->_file)
-#define getc(_stream)     (--(_stream)->_cnt >= 0 \
-                ? 0xff & *(_stream)->_ptr++ : _filbuf(_stream))
-#define putc(_c,_stream)  (--(_stream)->_cnt >= 0 \
-                ? 0xff & (*(_stream)->_ptr++ = (char)(_c)) :  _flsbuf((_c),(_stream)))
-#define getchar()         getc(stdin)
-#define putchar(_c)       putc((_c),stdout)
-
-
-
-#ifdef  _MT
-#undef  getc
-#undef  putc
-#undef  getchar
-#undef  putchar
+#ifdef __USE_MISC
+/* Faster version when locking is not required.  */
+extern int fileno_unlocked (FILE *__stream) __THROW __wur;
 #endif
 
 
+#if (defined __USE_POSIX2 || defined __USE_SVID  || defined __USE_BSD || \
+     defined __USE_MISC)
+/* Create a new stream connected to a pipe running the given command.
 
-#if     !__STDC__ && !defined(_POSIX_)
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern FILE *popen (const char *__command, const char *__modes) __wur;
 
-/* Non-ANSI names for compatibility */
+/* Close a stream opened by popen and return the status of its child.
 
-#define P_tmpdir  _P_tmpdir
-#define SYS_OPEN  _SYS_OPEN
-
-_CRTIMP int __cdecl fcloseall(void);
-_CRTIMP FILE * __cdecl fdopen(int, const char *);
-_CRTIMP int __cdecl fgetchar(void);
-_CRTIMP int __cdecl fileno(FILE *);
-_CRTIMP int __cdecl flushall(void);
-_CRTIMP int __cdecl fputchar(int);
-_CRTIMP int __cdecl getw(FILE *);
-_CRTIMP int __cdecl putw(int, FILE *);
-_CRTIMP int __cdecl rmtmp(void);
-_CRTIMP char * __cdecl tempnam(const char *, const char *);
-_CRTIMP int __cdecl unlink(const char *);
-
-#endif  /* __STDC__ */
-
-#ifdef  __cplusplus
-}
+   This function is a possible cancellation point and therefore not
+   marked with __THROW.  */
+extern int pclose (FILE *__stream);
 #endif
 
-#ifdef  _MSC_VER
-#pragma pack(pop)
-#endif  /* _MSC_VER */
 
-#endif  /* _INC_STDIO */
+#ifdef	__USE_POSIX
+/* Return the name of the controlling terminal.  */
+extern char *ctermid (char *__s) __THROW;
+#endif /* Use POSIX.  */
+
+
+#ifdef __USE_XOPEN
+/* Return the name of the current user.  */
+extern char *cuserid (char *__s);
+#endif /* Use X/Open, but not issue 6.  */
+
+
+#ifdef	__USE_GNU
+struct obstack;			/* See <obstack.h>.  */
+
+/* Write formatted output to an obstack.  */
+extern int obstack_printf (struct obstack *__restrict __obstack,
+			   const char *__restrict __format, ...)
+     __THROWNL __attribute__ ((__format__ (__printf__, 2, 3)));
+extern int obstack_vprintf (struct obstack *__restrict __obstack,
+			    const char *__restrict __format,
+			    _G_va_list __args)
+     __THROWNL __attribute__ ((__format__ (__printf__, 2, 0)));
+#endif /* Use GNU.  */
+
+
+#if defined __USE_POSIX || defined __USE_MISC
+/* These are defined in POSIX.1:1996.  */
+
+/* Acquire ownership of STREAM.  */
+extern void flockfile (FILE *__stream) __THROW;
+
+/* Try to acquire ownership of STREAM but do not block if it is not
+   possible.  */
+extern int ftrylockfile (FILE *__stream) __THROW __wur;
+
+/* Relinquish the ownership granted for STREAM.  */
+extern void funlockfile (FILE *__stream) __THROW;
+#endif /* POSIX || misc */
+
+#if defined __USE_XOPEN && !defined __USE_XOPEN2K && !defined __USE_GNU
+/* The X/Open standard requires some functions and variables to be
+   declared here which do not belong into this header.  But we have to
+   follow.  In GNU mode we don't do this nonsense.  */
+# define __need_getopt
+# include <getopt.h>
+#endif	/* X/Open, but not issue 6 and not for GNU.  */
+
+/* If we are compiling with optimizing read this file.  It contains
+   several optimizing inline functions and macros.  */
+#ifdef __USE_EXTERN_INLINES
+# include <bits/stdio.h>
+#endif
+#if __USE_FORTIFY_LEVEL > 0 && defined __extern_always_inline
+# include <bits/stdio2.h>
+#endif
+#ifdef __LDBL_COMPAT
+# include <bits/stdio-ldbl.h>
+#endif
+
+__END_DECLS
+
+#endif /* <stdio.h> included.  */
+
+#endif /* !_STDIO_H */

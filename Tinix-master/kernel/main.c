@@ -14,6 +14,8 @@
 #include "console.h"
 #include "global.h"
 #include "proto.h"
+#include "stdio.h"
+#include "stdlib.h"
      
 int strcmp(char *str1,char *str2)
 {
@@ -137,6 +139,7 @@ PUBLIC int tinix_main()
 	proc_table[4].priority =  7;
 	proc_table[5].priority =  10;
 	proc_table[6].priority =  10;//calendar
+	proc_table[7].priority =  14;//2048
 
 
 	firstLen=firstHead=secondLen=thirdLen=0;
@@ -151,6 +154,7 @@ PUBLIC int tinix_main()
 	proc_table[4].nr_tty = 1;
 	proc_table[5].nr_tty = 1;
 	proc_table[6].nr_tty = 2; //calendar Alt+F3
+	proc_table[7].nr_tty = 4; //calendar Alt+F5
 
 	k_reenter	= 0;
 	ticks		= 0;
@@ -371,19 +375,415 @@ void TestE()
 				Game2048
 *=======================================================================*/
 
-TTY *goBangGameTty=tty_table+2;
+TTY *gameTty = tty_table+4;
 
-
-void displayGameState()
+/*void displayGameState()
 {
 
 	sys_clear(goBangGameTty);
 	disp_str("start");
 
+}*/
+
+
+int num[4][4];
+int score, gameover, ifappear, gamew, gamef,move;
+int key;
+void explation()
+{
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+    printf("****************  rules   ***************\n");
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+//    printf("玩家可以选择上、下、左、右或W、A、S、D去移动滑块\n");
+//    printf("玩家选择的方向上若有相同的数字则合并\n");
+//    printf("合并所得的所有新生成数字相加即为该步的有效得分\n");
+//    printf("玩家选择的方向行或列前方有空格则出现位移\n");
+//    printf("每移动一步，空位随机出现一个2或4\n");
+//    printf("棋盘被数字填满，无法进行有效移动，判负，游戏结束\n");
+//    printf("棋盘上出现2048，获胜，游戏结束\n");
+//    printf("按上下左右去移动滑块\n");
+//    printf("请按任意键返回主菜单...\n");
+}
+void gamefaile()
+{
+    int i, j;
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+    printf("***************   you fail   ************\n");
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+    printf("---------------------\n");
+    for (j = 0; j<4; j++)
+    {
+        for (i = 0; i<4; i++)
+            if (num[j][i] == 0)
+                printf("|    ");
+            else
+                printf("|   %d", num[j][i]);
+        printf("|\n");
+        printf("---------------------\n");
+    }
+//    printf("你的成绩：%d,移动了%d步\n", score,move);
+//    printf("请按任意键返回主菜单...\n");
+
+}
+void gamewin()
+{
+    int i, j;
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+    printf("****************   you win   ************\n");
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+    printf("---------------------\n\t\t\t");
+    for (j = 0; j<4; j++)
+    {
+        for (i = 0; i<4; i++)
+            if (num[j][i] == 0)
+                printf("|    ");
+            else
+                printf("|   %d", num[j][i]);
+        printf("|\n");
+        printf("---------------------\n");
+    }
+//    printf("你的成绩：%d,移动了%d步\n", score,move);
+//    printf("请按任意键返回主菜单...\n");
+}
+void prin()
+{
+    int i, j;
+    printf("*****************************************\n");//输出界面
+    printf("*****************************************\n");
+    printf("***************   start   ***************\n");
+    printf("*****************************************\n");
+    printf("*****************************************\n");
+//    printf("\t\t      请按方向键或W、A、S、D移动滑块\n");//输出操作提示语句
+//    printf("\t\t          按ESC返回至主菜单\n");
+    printf("---------------------\n");
+    for (j = 0; j<4; j++)                 //输出4*4的表格
+    {
+        for (i = 0; i<4; i++)
+            if (num[j][i] == 0)
+                printf("|    ");
+            else
+                printf("|   %d", num[j][i]);
+        printf("|\n");
+        printf("---------------------\n");
+    }
+//    printf("你的成绩：%d，移动了%d步\n", score,move);//输出得分和移动步数
 }
 
-void goBangGameStart()
-{}
+
+
+void appear()
+{
+    int i, j,ran,t[16],x=0,a,b;
+//    srand((int)time(0));          //随机种子初始化
+    for (j = 0; j < 4; j++)      //将空白的区域的坐标保存到中间数组t中
+        for (i = 0; i < 4;i++)
+            if (num[j][i] == 0)
+            {
+                t[x] = j * 10 + i;
+                x++;
+            }
+    if (x == 1)            //在t中随机取一个坐标
+        ran = x - 1;
+    else
+        ran = 10 % (x - 1);
+    a = t[ran] / 10;      //取出这个数值的十位数
+    b = t[ran] % 10;     //取出这个数值的个位数
+//    srand((int)time(0));
+    if ((10 % 9)>2)    //在此空白区域随机赋值2或4
+        num[a][b] = 2;
+    else
+        num[a][b] = 4;
+}
+
+void close()
+{
+    return ;
+}
+
+void add(int *p)
+{
+
+    int i=0, b;
+    while (i<3)
+    {
+        if (*(p + i) != 0)
+        {
+            for (b = i + 1; b < 4; b++)
+            {
+                if (*(p + b) != 0)
+                    if (*(p + i) == *(p + b))
+                    {
+                    score = score + (*(p + i)) + (*(p + b));
+                    *(p + i) = *(p + i) + *(p + b);
+                    if (*(p + i) == 2048)
+                        gamew = 1;
+                    *(p + b) = 0;
+                    i = b + i;
+                    ++ifappear;
+                    break;
+                    }
+                    else
+                    {
+                        i = b;
+                        break;
+                    }
+            }
+            if (b == 4)
+                i++;
+        }
+        else
+            i++;
+    }
+
+}
+
+void readNumber(int *x){
+	int i = 0;
+	*x = 0;
+	for (i = 0; i < gameTty->len && gameTty==' '; i++);
+	for (; i < gameTty->len && gameTty->str[i] != ' ' && gameTty->str != '\n'; i++){
+		*x = (*x)*10+(int) gameTty->str[i] - 48;	
+	}
+}
+
+void Gameplay()
+{
+    int i, j, g, e, a, b[4];
+    appear();
+    appear();
+    while (1)
+    {
+        if (ifappear!=0) 
+            appear();
+        sys_clear(gameTty);
+        prin();
+	int x;
+        openStartScanf(gameTty);
+        while(gameTty->startScanf);
+        readNumber(&x);
+        key = x;
+        switch (key)
+        {
+        case 39:
+        case 71:
+        case 72:
+            ifappear = 0;
+            for (j = 0; j < 4; j++)
+            {
+                for (i = 0; i < 4; i++)
+                {
+                    b[i] = num[i][j];
+                    num[i][j] = 0;
+                }
+                add(b);
+                e = 0;
+                for (g = 0; g < 4; g++)
+                {
+                    if (b[g] != 0)
+                    {
+                        num[e][j] = b[g];
+                        if (g != e)
+                            ++ifappear;
+                        e++;
+                    }
+                }
+            }
+            if (ifappear!=0)
+                ++move;
+        break;
+        case 35:
+        case 67:
+        case 80:
+            ifappear = 0;
+            for (j = 0; j < 4; j++)
+            {
+                for (i = 0; i < 4; i++)
+                {
+                    b[i] = num[i][j];
+                    num[i][j] = 0;
+                }
+                add(b);
+                e = 3;
+                for (g = 3; g>=0; g--)
+                {
+                    if (b[g] != 0)
+                    {
+                        num[e][j] = b[g];
+                        if (g != e)
+                            ++ifappear;
+                        e--;
+                    }
+                }
+            }
+            if (ifappear != 0)
+                ++move;
+        break;
+        case  17:
+        case  49:
+        case  75:
+            ifappear = 0;
+            for (j = 0; j < 4; j++)
+            {
+                for (i = 0; i < 4; i++)
+                {
+                    b[i] = num[j][i];
+                    num[j][i] = 0;
+                }
+                add(b);
+                e = 0;
+                for (g = 0; g < 4; g++)
+                {
+                    if (b[g] != 0)
+                    {
+                        num[j][e] = b[g];
+                        if (g!=e)
+                            ++ifappear;
+                        e++;
+                    }
+                }
+            }
+            if (ifappear != 0)
+                ++move;
+        break;
+        case  20:
+        case  52:
+        case  77:
+            ifappear = 0;
+            for (j = 0; j < 4; j++)
+            {
+                for (i = 0; i < 4; i++)
+                {
+                    b[i] = num[j][i];
+                    num[j][i] = 0;
+                }
+                add(b);
+                e = 3;
+                for (g = 3; g >=0; g--)
+                {
+                    if (b[g] != 0)
+                    {
+                        num[j][e] = b[g];
+                        if (g!=e)
+                            ++ifappear;
+                        e--;
+                    }
+                }
+            }
+            if (ifappear != 0)
+                ++move;
+        break;
+        case 27:
+            break;
+
+        }
+        for (j = 0; j < 4; j++)
+        {
+            for (i = 0; i < 4; i++)
+            {
+                if (j < 3)
+                {
+                    if (i < 3)
+                    {
+                        if (num[j][i] == num[j + 1][i] || num[j][i] == num[j][i + 1] || num[j][i] == 0)
+                        {
+                            gamef = 0;
+                            break;
+                        }
+                        else
+                            gamef = 1;
+                    }
+                    else
+                    {
+                        if (num[j][i] == num[j + 1][i] || num[j][i] == 0)
+                        {
+                            gamef = 0;
+                            break;
+                        }
+                        else
+                            gamef = 1;
+                    }
+                }
+                else
+                {
+                    if (i < 3)
+                    {
+                        if (num[j][i] == num[j][i + 1] || num[j][i] == 0 || num[j][i + 1] == 0)
+                        {
+                            gamef = 0;
+                            break;
+                        }
+                        else
+                            gamef = 1;
+                    }
+                }
+
+            }
+            if (gamef == 0)
+                break;
+        }
+        if (gamef == 1 || gamew == 1)
+            break;
+
+    }
+    if (gamef == 1)
+        gamefaile();
+    else
+        gamewin();
+}
+
+void menu()
+{
+    int n;
+    printf("****************************************\n");            //输出游戏菜单的图形
+    printf("*              1.start game            *\n");
+    printf("*              2.game rule             *\n");
+    printf("*              3.quit                  *\n");
+    printf("****************************************\n");
+    printf("please input 1,2or3[] ");
+    int x;
+    openStartScanf(gameTty);
+    while(gameTty->startScanf);
+    readNumber(&x);
+    n = x;
+    printf("%d",n);
+    //scanf("%d", &n);
+    switch (n)
+    {
+    case 1:
+	sys_clear(gameTty);
+        Gameplay();                                                         //游戏开始函数
+        break;
+    case 2:
+        explation();                                                       //游戏规则函数
+        break;
+    case 3:
+        close();                                                          //关闭游戏函数
+        break;
+    }
+}
+
+int goBangGame()
+{   
+    int j, i;
+    for (j = 0; j < 4; j++)             //对4*4进行初始赋值为0
+        for (i = 0; i < 4; i++)
+            num[j][i] = 0;
+    gamew = 0;                        //游戏获胜的判断变量初始化
+    gamef = 0;                       //游戏失败的判断变量初始化
+    ifappear = 0;                   //判断是否应该随机出现2或4的变量初始化
+    score = 0;                     //游戏得分变量初始化
+    gameover = 0;                 //游戏是否结束的变量初始化
+    move = 0;                    //游戏的移动步数初始化
+    menu();                     //调用主菜单函数
+    while(1);
+    return 0;
+}
 
 
 /*======================================================================*
